@@ -7,9 +7,9 @@ Reto: 0
 
 ## Equipo
 
-- Integrante 1
-- Integrante 2
-- Integrante 3
+- Anyeline Arauz (@anyelinearauz-jpg)
+- Analía Rodríguez (@leaniuwnm)
+- Alanis Martez (@Ali-SMgt)
 
 ## Problema
 
