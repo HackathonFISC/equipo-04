@@ -1,0 +1,14 @@
+[project]
+name = "water-coordinator"
+version = "0.1.0"
+description = "Centro de coordinación agéntico para la crisis del agua en Panamá Oeste (fase de diseño)."
+requires-python = ">=3.12"
+# Sin dependencias hasta que se aprueben en docs/DECISIONS.md.
+dependencies = []
+
+[project.scripts]
+water-coordinator = "water_coordinator.main:main"
+
+[build-system]
+requires = ["uv_build>=0.9,<0.13"]
+build-backend = "uv_build"
