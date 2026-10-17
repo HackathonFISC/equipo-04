@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es-PA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión | AquaAlerta Panamá Oeste</title>
+  <meta name="description" content="Acceso al panel de administración de AquaAlerta. Inicia sesión con tu correo o nombre de usuario." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Fondo decorativo compartido por las páginas de la plataforma. -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Encabezado de marca y contexto de acceso administrativo. -->
+  <header class="header" id="header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="AquaAlerta inicio">
+        <img class="logo-icon" src="imagenes/logoAAA.jpeg" alt="" />
+        <span class="logo-text">AquaAlerta</span>
+      </a>
+      <div style="margin-left: auto; color:#94a3b8; font-size:0.9rem;">Panamá Oeste · Acceso administrativo</div>
+    </div>
+  </header>
+
+  <!-- Tarjeta de acceso administrativo. -->
+  <div class="login-wrap">
+    <div class="login-card glass-card" style="padding: 2.5rem;">
+      <!-- Identidad visual de AquaAlerta dentro del formulario. -->
+      <div class="brand-header">
+        <img src="imagenes/logoAAA.jpeg" alt="AquaAlerta" />
+        <div>
+          <div class="brand-text">AquaAlerta</div>
+          <div class="brand-sub">Acceso al panel de administración</div>
+        </div>
+      </div>
+
+      <!-- Conectar este formulario al servicio de autenticación. -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico o nombre de usuario</label>
+          <div class="field field-with-icon">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <input type="text" id="loginEmail" autocomplete="username" placeholder="correo@ejemplo.com o usuario" required>
+          </div>
+          <div class="error-text" id="emailError">Correo inválido</div>
+        </div>
+
+        <div class="form-group">
+          <label>Contraseña</label>
+          <div class="field field-with-icon field-with-eye" style="position:relative;">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input type="password" id="loginPassword" placeholder="••••••••" required>
+            <button type="button" class="field-eye" onclick="togglePassword()" aria-label="Mostrar u ocultar contraseña">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          <div class="error-text" id="passError">Contraseña requerida</div>
+        </div>
+
+        <label class="checkbox-group">
+          <input type="checkbox" id="remember"> Recordarme
+        </label>
+        <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+
+        <button type="submit" class="btn-login" id="loginBtn">Iniciar sesión</button>
+      </form>
+
+      <div class="footer-note">
+        ¿No tienes cuenta? <a href="#" onclick="showToast('info','Solicitud de acceso','Contacta al administrador del sistema para crear tu cuenta.')">Solicita acceso administrativo</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aviso de acceso restringido para personal autorizado. -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-copy" style="font-size:0.8rem;">AquaAlerta Panamá Oeste · Acceso exclusivo para personal autorizado</p>
+    </div>
+  </footer>
+
+  <!-- Interacciones visuales del formulario; la autenticación debe conectarse al backend. -->
+  <script src="js/main.js"></script>
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('loginPassword');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      // TODO: enviar credenciales al servicio de autenticación.
+    });
+  </script>
+</body>
+</html>

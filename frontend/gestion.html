@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es-PA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión | AquaAlerta Panamá Oeste</title>
+  <meta name="description" content="Gestión unificada de reportes, comunidades, mapa, tracking, estadísticas y configuración." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Fondo decorativo compartido por las páginas de la plataforma. -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Navegación entre el panel principal y la gestión unificada. -->
+  <header class="header" id="header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="AquaAlerta inicio">
+        <img class="logo-icon" src="imagenes/logoAAA.jpeg" alt="" />
+        <span class="logo-text">AquaAlerta</span>
+      </a>
+
+      <nav class="nav" id="nav">
+        <ul class="nav-list">
+          <li><a href="admin.html" class="nav-link">Panel</a></li>
+          <li><a href="gestion.html" class="nav-link active">Gestión</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-outline btn-sm hidden-mobile">Cerrar sesión</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Título de la vista que reúne los módulos de gestión. -->
+  <section class="page-hero animate-fade-in">
+    <div class="container">
+      <h1 class="page-title">Gestión de la plataforma</h1>
+    </div>
+  </section>
+
+  <!-- Pestañas y paneles de reportes, comunidades, mapa, seguimiento, estadísticas y ajustes. -->
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs-bar" role="tablist">
+      <button type="button" class="tab-btn active" data-target="tab-reportes" role="tab" aria-selected="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L2 22"></path></svg>
+        Reportes
+      </button>
+      <button type="button" class="tab-btn" data-target="tab-comunidades" role="tab" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Comunidades
+      </button>
+      <button type="button" class="tab-btn" data-target="tab-mapa" role="tab" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 3 1 22 23 22 23 3"></polygon><polyline points="9 3 22 3 12 8"></polyline></svg>
+        Mapa
+      </button>
+      <button type="button" class="tab-btn" data-target="tab-tracking" role="tab" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="12" y1="12" x2="12.01" y2="12"></line></svg>
+        Tracking
+      </button>
+      <button type="button" class="tab-btn" data-target="tab-estadisticas" role="tab" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 21 6 12 2 12"></polyline></svg>
+        Estadísticas
+      </button>
+      <button type="button" class="tab-btn" data-target="tab-configuracion" role="tab" aria-selected="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-0.9A1.65 1.65 0 0 0 9 14a1.65 1.65 0 0 0-1-1.51l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51V9a4 4 0 0 1 .8-3.92 6 6 0 0 1 4-.47 6 6 0 0 1 4 .47 4 4 0 0 1 .8 3.92l.01.09z"></path></svg>
+        Configuración
+      </button>
+    </div>
+
+    <!-- Panel Reportes -->
+    <div id="tab-reportes" class="tab-panel">
+      <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Gestión de reportes</h2>
+      <div class="filters-bar">
+        <div class="form-group">
+          <label>Buscar reporte</label>
+          <div class="field field-with-icon"><svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="searchReport" placeholder="Código o comunidad"></div>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="statusFilter">
+            <option value="">Todos los estados</option>
+            <option value="Recibido">Recibido</option>
+            <option value="En revisión">En revisión</option>
+            <option value="Confirmado">Confirmado</option>
+            <option value="Rechazado">Rechazado</option>
+            <option value="Cerrado">Cerrado</option>
+          </select>
+        </div>
+      </div>
+      <!-- Conectar el servicio de reportes y agregar aquí las acciones habilitadas por el backend. -->
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Comunidad</th>
+              <th>Distrito</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Registrado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="reportesTable"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyReportes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 3L7 18"></path></svg>
+        <h3>Reportes</h3>
+        <p>Conecta el servicio de reportes para mostrar resultados.</p>
+      </div>
+    </div>
+
+    <!-- Panel Comunidades -->
+    <div id="tab-comunidades" class="tab-panel hidden">
+      <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Comunidades afectadas</h2>
+      <div class="filters-bar">
+        <div class="form-group">
+          <label>Buscar comunidad</label>
+          <div class="field field-with-icon"><svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="searchCommunity" placeholder="Nombre o código"></div>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="commStatusFilter">
+            <option value="">Todos los estados</option>
+            <option value="Sin agua">Sin agua</option>
+            <option value="Reporte recibido">Reporte recibido</option>
+            <option value="En revisión">En revisión</option>
+            <option value="Incidencia confirmada">Incidencia confirmada</option>
+            <option value="Servicio restablecido">Servicio restablecido</option>
+          </select>
+        </div>
+      </div>
+      <div class="community-overview">
+        <div class="map-col">
+          <div class="map-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 3 1 22 23 22 23 3"></polygon><polyline points="9 3 22 3 12 8"></polyline></svg>
+            <div>Conecta un proveedor de mapas para mostrar ubicaciones.</div>
+          </div>
+          <!-- TODO: integrar el proveedor de mapas y las coordenadas reales de las comunidades. -->
+        </div>
+        <div class="list-col">
+          <div id="communitiesList">
+            <!-- Tarjetas generadas por JS -->
+          </div>
+        </div>
+      </div>
+      <div id="communityDetail" class="detail-panel" style="display:none; margin-top:1.5rem;">
+        <button onclick="document.getElementById('communityDetail').style.display='none'" style="background:none;border:none;color:#0FC8BB;font-weight:700;cursor:pointer;margin-bottom:1rem;">← Volver</button>
+        <h3 id="detailTitle">Comunidad</h3>
+        <div class="detail-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><strong>Estado:</strong> <span id="detailStatus">-</span></div>
+        <div class="detail-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5l7-5 7 5z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><strong>Tipo:</strong> <span id="detailType">-</span></div>
+        <div class="detail-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><strong>Personas (est.):</strong> <span id="detailPeople">-</span></div>
+        <div class="detail-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><strong>Actualización:</strong> <span id="detailUpdated">-</span></div>
+      </div>
+      <section class="module-section glass-card ai-reports-section" aria-labelledby="aiReportsTitle">
+        <div class="module-header">
+          <div>
+            <h2 id="aiReportsTitle">Reportes recibidos por IA</h2>
+            <!-- TODO: conectar el servicio de IA y mostrar su disponibilidad. -->
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Reporte</th>
+                <th>Comunidad</th>
+                <th>Clasificación de IA</th>
+                <th>Confianza</th>
+                <th>Estado</th>
+                <th>Recibido</th>
+              </tr>
+            </thead>
+            <tbody id="aiReportsTable">
+              <!-- TODO: renderizar resultados del servicio de clasificación de IA. -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Panel Mapa -->
+    <div id="tab-mapa" class="tab-panel hidden">
+      <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Mapa de comunidades afectadas</h2>
+      <div class="map-placeholder" id="mapaCanvas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 3 1 22 23 22 23 3"></polygon><polyline points="9 3 22 3 12 8"></polyline></svg>
+        <div id="mapaMensaje">Conecta el proveedor de mapas para mostrar ubicaciones.</div>
+      </div>
+      <div class="legend" style="margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
+          <div class="badge-status badge-critical" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Crítica</div>
+          <span>Sin agua / Crítica</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
+          <div class="badge-status badge-cyan" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Recibido</div>
+          <span>Reporte recibido</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
+          <div class="badge-status badge-green" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Restablecido</div>
+          <span>Servicio restablecido</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Tracking -->
+    <div id="tab-tracking" class="tab-panel hidden">
+      <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Tracking de reportes</h2>
+      <div class="filters-bar">
+        <div class="form-group">
+          <label>Buscar código o comunidad</label>
+          <div class="field field-with-icon"><svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="searchTracking" placeholder="AA-XXXXXXXX o nombre"></div>
+        </div>
+        <div class="form-group">
+          <label>Urgencia</label>
+          <select id="urgencyFilter">
+            <option value="">Todas las urgencias</option>
+            <option value="critical">Crítica</option>
+            <option value="medium">Media</option>
+            <option value="normal">Normal</option>
+          </select>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(15,200,187,0.15); color:#0FC8BB;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="12" y1="12" x2="12.01" y2="12"></line></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiTotal">-</h3><p>Total reportes</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(34,197,94,0.15); color:#22c55e;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiResueltos">-</h3><p>Resueltos</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(239,68,68,0.15); color:#ef4444;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiCriticas">-</h3><p>Urgencia crítica</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(245,158,11,0.15); color:#f59e0b;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiPendientes">-</h3><p>Pendientes</p></div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Comunidad</th>
+              <th>Distrito</th>
+              <th>Urgencia</th>
+              <th>Estado</th>
+              <th>Actualización</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="trackingTable"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyTracking">
+        <h3>Seguimiento de reportes</h3>
+        <p>Conecta el servicio de reportes para mostrar resultados.</p>
+      </div>
+    </div>
+
+    <!-- Panel Estadísticas -->
+    <div id="tab-estadisticas" class="tab-panel hidden">
+      <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Estadísticas</h2>
+      <!-- Conectar indicadores y series a la API de estadísticas. -->
+      <div class="stats-period" aria-label="Período">
+        <span>Período</span>
+        <strong>-</strong>
+      </div>
+      <div class="kpi-row stats-kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(15,200,187,0.15); color:#0FC8BB;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="12" y1="12" x2="12.01" y2="12"></line></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiReports">-</h3><p>Total de reportes</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(239,68,68,0.15); color:#ef4444;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiConfirmed">-</h3><p>Incidencias confirmadas</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(113,57,200,0.15); color:#7139C8;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h14L19 18H5z"></path></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiCommunities">-</h3><p>Comunidades afectadas</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(34,197,94,0.15); color:#22c55e;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiSchedules">-</h3><p>Entregas completadas</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(113,57,200,0.15); color:#c4b5fd;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.75V19h8v-3.25A7 7 0 0 0 12 3Z"></path><path d="M9 22h6"></path><path d="M9 12h.01M15 12h.01"></path></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiAiReports">-</h3><p>Reportes analizados por IA</p></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(245,158,11,0.15); color:#f59e0b;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+          </div>
+          <div class="kpi-info"><h3 id="kpiAverageResponse">-</h3><p>Tiempo promedio de atención</p></div>
+        </div>
+      </div>
+      <div class="stats-chart-grid">
+        <div class="glass-card stats-chart-card">
+          <h3>Tendencia de reportes</h3>
+          <svg class="weekly-chart" id="weeklyReportsChart" viewBox="0 0 600 230" role="img" aria-label="Gráfico de tendencia de reportes"></svg>
+        </div>
+        <div class="glass-card stats-chart-card">
+          <h3>Distribución por estado</h3>
+          <div class="status-donut-layout">
+            <div class="status-donut" id="statusDonut" role="img" aria-label="Distribución de incidencias por estado">
+              <div class="status-donut-center"><strong id="statusDonutTotal">-</strong><span>incidencias</span></div>
+            </div>
+            <div class="status-donut-legend" id="statusDonutLegend" aria-label="Leyenda de estados"></div>
+          </div>
+        </div>
+        <div class="glass-card stats-chart-card">
+          <h3>Incidencias por distrito</h3>
+          <div class="district-chart" id="districtChart" role="list" aria-label="Incidencias por distrito"></div>
+        </div>
+        <div class="glass-card stats-chart-card">
+          <h3>Estado de incidencias</h3>
+          <div class="status-chart" id="statusChart" role="list" aria-label="Distribución de incidencias por estado"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Configuración -->
+    <div id="tab-configuracion" class="tab-panel hidden">
+      <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Configuración</h2>
+      <div class="glass-card" style="padding:2rem;">
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div style="border-bottom:1px solid rgba(15,200,187,0.1); padding-bottom:0.75rem;">
+            <strong style="color:#F5F7FA;">Distritos</strong>
+            <!-- TODO: cargar los distritos desde el catálogo del backend. -->
+          </div>
+          <div style="border-bottom:1px solid rgba(15,200,187,0.1); padding-bottom:0.75rem;">
+            <strong style="color:#F5F7FA;">Tipos de incidencia</strong>
+            <!-- TODO: cargar los tipos de incidencia desde el catálogo del backend. -->
+          </div>
+          <div style="padding-bottom:0.75rem;">
+            <strong style="color:#F5F7FA;">Estados de incidencia</strong>
+            <!-- TODO: cargar los estados permitidos desde el catálogo del backend. -->
+          </div>
+        </div>
+      </div>
+      <!-- TODO: definir y conectar la política de privacidad con los servicios de datos reales. -->
+    </div>
+  </div>
+
+  <!-- Pie informativo con navegación, contacto y canales comunitarios. -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo-small"><img src="imagenes/logoAAA.jpeg" alt="" /><span>AquaAlerta</span></div>
+        <p class="footer-desc">Plataforma comunitaria para reportes del suministro de agua en Panamá Oeste.</p>
+        <p class="footer-tagline">«Agua e información para todos».</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4 class="footer-col-title">Plataforma</h4>
+          <ul>
+            <li><a href="admin.html">Panel</a></li>
+            <li><a href="gestion.html">Gestión unificada</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-contact">
+        <h4 class="footer-col-title">Contacto</h4>
+        <ul class="contact-list">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 3 1 22 23 22 23 3"></polygon><polyline points="9 3 22 3 12 8"></polyline></svg> Arraiján y La Chorrera, Panamá Oeste</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p class="footer-copy">AquaAlerta Panamá Oeste.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Conectar reportes, comunidades, mapa y estadísticas a los servicios del backend. -->
+  <script src="js/main.js"></script>
+  <script>
+    /* ---------- Reportes ---------- */
+    const reportes = []; // TODO: cargar desde el servicio de reportes.
+    const estadoColors = {
+      Recibido: 'badge-cyan',
+      'En revisión': 'badge-purple',
+      Confirmado: 'badge-orange',
+      Rechazado: 'badge-slate',
+      Cerrado: 'badge-green',
+    };
+
+    function renderReportes() {
+      const table = document.getElementById('reportesTable');
+      const empty = document.getElementById('emptyReportes');
+      const q = document.getElementById('searchReport').value.toLowerCase();
+      const s = document.getElementById('statusFilter').value;
+      const data = reportes.filter(r =>
+        (r.codigo.toLowerCase().includes(q) ||
+         r.comunidad.toLowerCase().includes(q) ||
+         r.distrito.toLowerCase().includes(q) ||
+         r.tipo.toLowerCase().includes(q))
+        && (!s || r.estado === s)
+      );
+      table.innerHTML = '';
+      if (data.length === 0) {
+        empty.style.display = 'block';
+        table.parentElement.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      table.parentElement.style.display = '';
+      data.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${r.codigo}</span></td>
+          <td>${r.comunidad}</td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${r.distrito}</td>
+          <td>${r.tipo}</td>
+          <td><span class="badge-status ${estadoColors[r.estado]}">${r.estado}</span></td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${r.fecha}</td>
+          <td><!-- TODO: conectar acciones de cambio de estado con la API. --></td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    document.getElementById('searchReport').addEventListener('input', renderReportes);
+    document.getElementById('statusFilter').addEventListener('change', renderReportes);
+    renderReportes();
+
+    /* ---------- Comunidades ---------- */
+    const incidents = []; // TODO: cargar desde los servicios de comunidades e incidencias.
+    const statusMap = {
+      'Sin agua': 'badge-critical',
+      'Reporte recibido': 'badge-cyan',
+      'En revisión': 'badge-purple',
+      'Incidencia confirmada': 'badge-orange',
+      'Cisterna programado': 'badge-blue',
+      'Servicio restablecido': 'badge-green',
+    };
+
+    function renderComunidades() {
+      const list = document.getElementById('communitiesList');
+      const q = document.getElementById('searchCommunity').value.toLowerCase();
+      const s = document.getElementById('commStatusFilter').value;
+      const data = incidents.filter(i =>
+        i.name.toLowerCase().includes(q) &&
+        (!s || i.status === s)
+      );
+      list.innerHTML = '';
+      if (data.length === 0) {
+        list.innerHTML = '<div class="empty-state" style="padding:2rem;"><h3>Comunidades</h3><p>Conecta el servicio de comunidades para mostrar resultados.</p></div>';
+        return;
+      }
+      data.forEach(inc => {
+        const card = document.createElement('article');
+        card.className = 'card glass-card';
+        card.innerHTML = `
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex-1">
+              <h3 class="card-title" style="margin-bottom:0.25rem;">${inc.name}</h3>
+              <p class="card-text" style="margin-bottom:0.75rem; font-size:0.85rem;">${inc.district} · ${inc.corregimiento}</p>
+            </div>
+            <span class="badge-status ${statusMap[inc.status]}">${inc.status}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:end; margin-top:1rem;">
+            <div class="detail-item" style="margin:0; font-size:0.85rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>${inc.people} personas (est.)</span>
+            </div>
+            <span style="font-size:0.8rem; color:#64748b;">${inc.updated}</span>
+          </div>
+        `;
+        card.onclick = () => openDetail(inc);
+        list.appendChild(card);
+      });
+    }
+
+    function openDetail(inc) {
+      const panel = document.getElementById('communityDetail');
+      document.getElementById('detailTitle').textContent = inc.name;
+      document.getElementById('detailStatus').textContent = inc.status;
+      document.getElementById('detailType').textContent = inc.type;
+      document.getElementById('detailPeople').textContent = inc.people + ' (est.)';
+      document.getElementById('detailUpdated').textContent = inc.updated;
+      panel.style.display = 'block';
+      panel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('searchCommunity').addEventListener('input', renderComunidades);
+    document.getElementById('commStatusFilter').addEventListener('change', renderComunidades);
+    renderComunidades();
+
+    /* ---------- Mapa ---------- */
+    // TODO: integrar un proveedor de mapas y cargar coordenadas reales del backend.
+
+    /* ---------- Tracking ---------- */
+    const reports = []; // TODO: cargar desde el servicio de seguimiento.
+    const urgencyColors = { critical: 'badge-critical', medium: 'badge-orange', normal: 'badge-normal' };
+    const statusColors = {
+      Recibido: 'badge-cyan',
+      'En revisión': 'badge-purple',
+      Confirmado: 'badge-orange',
+      'Cisterna programado': 'badge-blue',
+      Atendido: 'badge-green',
+      Cerrado: 'badge-slate',
+      Rechazado: 'badge-slate',
+    };
+
+    function renderTracking() {
+      const table = document.getElementById('trackingTable');
+      const empty = document.getElementById('emptyTracking');
+      const q = document.getElementById('searchTracking').value.toLowerCase();
+      const u = document.getElementById('urgencyFilter').value;
+      const data = reports.filter(r =>
+        (r.code.toLowerCase().includes(q) ||
+         r.community.toLowerCase().includes(q) ||
+         r.district.toLowerCase().includes(q) ||
+         r.type.toLowerCase().includes(q))
+        && (!u || r.urgency === u)
+      );
+      if (data.length > 0) {
+        document.getElementById('kpiTotal').textContent = data.length;
+        document.getElementById('kpiResueltos').textContent = data.filter(r => r.status === 'Atendido' || r.status === 'Cerrado').length;
+        document.getElementById('kpiCriticas').textContent = data.filter(r => r.urgency === 'critical').length;
+        document.getElementById('kpiPendientes').textContent = data.filter(r => r.status === 'Recibido' || r.status === 'En revisión').length;
+      }
+      table.innerHTML = '';
+      if (data.length === 0) {
+        empty.style.display = 'block';
+        table.parentElement.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      table.parentElement.style.display = '';
+      data.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${r.code}</span></td>
+          <td>${r.community}</td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${r.district}</td>
+          <td><span class="badge-status ${urgencyColors[r.urgency]}">${r.urgencyLabel}</span></td>
+          <td><span class="badge-status ${statusColors[r.status] || 'badge-slate'}">${r.status}</span></td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${r.updated}</td>
+          <td><!-- TODO: conectar la acción de detalle al backend. --></td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    document.getElementById('searchTracking').addEventListener('input', renderTracking);
+    document.getElementById('urgencyFilter').addEventListener('change', renderTracking);
+    renderTracking();
+
+    /* ---------- Estadísticas ---------- */
+    // TODO: poblar indicadores y series con la respuesta de la API de estadísticas.
+    const byDistrict = [];
+    const byStatus = [];
+    const weeklyReports = [];
+
+    const weeklyChart = document.getElementById('weeklyReportsChart');
+    const svgNamespace = 'http://www.w3.org/2000/svg';
+    const chartWidth = 600;
+    const chartHeight = 230;
+    const chartPadding = { top: 18, right: 18, bottom: 38, left: 34 };
+    const chartPlotHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+    const chartPlotWidth = chartWidth - chartPadding.left - chartPadding.right;
+    const createSvgElement = (name, attributes) => {
+      const element = document.createElementNS(svgNamespace, name);
+      Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    };
+
+    if (weeklyReports.length > 0) {
+      const weeklyMax = Math.ceil(Math.max(...weeklyReports.map(report => report.value)) / 5) * 5;
+      const weeklyScaleMax = Math.max(weeklyMax, 5);
+      for (let tick = 0; tick <= weeklyScaleMax; tick += 5) {
+      const y = chartPadding.top + chartPlotHeight * (1 - tick / weeklyScaleMax);
+      weeklyChart.appendChild(createSvgElement('line', {
+        x1: chartPadding.left,
+        y1: y,
+        x2: chartWidth - chartPadding.right,
+        y2: y,
+        class: 'weekly-chart-gridline',
+      }));
+      const label = createSvgElement('text', {
+        x: chartPadding.left - 10,
+        y: y + 4,
+        'text-anchor': 'end',
+        class: 'weekly-chart-axis-label',
+      });
+      label.textContent = tick;
+      weeklyChart.appendChild(label);
+      }
+
+      const weeklyPoints = weeklyReports.map((report, index) => ({
+        ...report,
+        x: chartPadding.left + (chartPlotWidth * index) / (weeklyReports.length - 1),
+        y: chartPadding.top + chartPlotHeight * (1 - report.value / weeklyScaleMax),
+      }));
+      weeklyChart.appendChild(createSvgElement('polyline', {
+        points: weeklyPoints.map(point => `${point.x},${point.y}`).join(' '),
+        class: 'weekly-chart-line',
+      }));
+      weeklyPoints.forEach(point => {
+        weeklyChart.appendChild(createSvgElement('circle', {
+          cx: point.x,
+          cy: point.y,
+          r: 5,
+          class: 'weekly-chart-point',
+        }));
+        const label = createSvgElement('text', {
+          x: point.x,
+          y: chartHeight - 10,
+          'text-anchor': 'middle',
+          class: 'weekly-chart-axis-label',
+        });
+        label.textContent = point.day;
+        weeklyChart.appendChild(label);
+      });
+    }
+
+    const statusDonut = document.getElementById('statusDonut');
+    const statusDonutLegend = document.getElementById('statusDonutLegend');
+    const statusTotal = byStatus.reduce((total, status) => total + status.value, 0);
+    let statusAngle = 0;
+    const statusSegments = byStatus.map(status => {
+      const start = statusAngle;
+      statusAngle += (status.value / statusTotal) * 360;
+      const share = Math.round((status.value / statusTotal) * 100);
+      const legendItem = document.createElement('div');
+      legendItem.className = 'status-donut-legend-item';
+      legendItem.setAttribute('role', 'listitem');
+      const swatch = document.createElement('span');
+      swatch.className = 'status-donut-swatch';
+      swatch.style.backgroundColor = status.color;
+      const label = document.createElement('span');
+      label.textContent = status.label;
+      const value = document.createElement('strong');
+      value.textContent = `${status.value} · ${share}%`;
+      legendItem.append(swatch, label, value);
+      statusDonutLegend.appendChild(legendItem);
+      return `${status.color} ${start}deg ${statusAngle}deg`;
+    });
+    if (byStatus.length > 0) {
+      statusDonut.style.background = `conic-gradient(${statusSegments.join(', ')})`;
+      statusDonut.setAttribute('aria-label', `Distribución de ${statusTotal} incidencias por estado`);
+      document.getElementById('statusDonutTotal').textContent = statusTotal;
+    }
+
+    const districtChart = document.getElementById('districtChart');
+    const maxD = Math.max(...byDistrict.map(d => d.value));
+    byDistrict.forEach(d => {
+      const percent = Math.round((d.value / maxD) * 100);
+      const row = document.createElement('div');
+      row.className = 'district-stat-row';
+      row.setAttribute('role', 'listitem');
+      row.innerHTML = `
+        <div class="district-stat-heading"><span>${d.name}</span><strong>${d.value}</strong></div>
+        <div class="stats-bar-track" role="progressbar" aria-label="${d.name}" aria-valuemin="0" aria-valuemax="${maxD}" aria-valuenow="${d.value}">
+          <div class="stats-bar-fill" style="width:${percent}%"></div>
+        </div>
+      `;
+      districtChart.appendChild(row);
+    });
+
+    const statusChart = document.getElementById('statusChart');
+    const maxS = Math.max(...byStatus.map(s => s.value));
+    byStatus.forEach(s => {
+      const w = (s.value / maxS) * 100;
+      const row = document.createElement('div');
+      row.className = 'status-stat-row';
+      row.setAttribute('role', 'listitem');
+      row.innerHTML = `
+        <span class="status-stat-label">${s.label}</span>
+        <div class="stats-bar-track" role="progressbar" aria-label="${s.label}" aria-valuemin="0" aria-valuemax="${maxS}" aria-valuenow="${s.value}">
+          <div class="stats-bar-fill" style="width:${w}%; background:linear-gradient(135deg,${s.color},${s.color}dd)"></div>
+        </div>
+        <strong class="status-stat-value">${s.value}</strong>
+      `;
+      statusChart.appendChild(row);
+    });
+  </script>
+</body>
+</html>
