@@ -11,6 +11,7 @@ from water_coordinator.schemas.models import (
 )
 from water_coordinator.services.clasificacion import clasificar, extraer_datos, extraer_ubicacion, normalizar
 from water_coordinator.services.fechas import dias_entre, fecha_incidente
+from water_coordinator.services.observabilidad import Observabilidad
 
 log = logging.getLogger(__name__)
 
@@ -90,9 +91,9 @@ def vincular_duplicados(regs: list[RegistroAfectacion]) -> None:
 
 
 class AgenteIngesta(RoutedAgent):
-    def __init__(self, llm: ChatCompletionClient | None = None):
+    def __init__(self, llm: ChatCompletionClient | None = None, obs: Observabilidad | None = None, modelo: str | None = None):
         super().__init__("Agente 1: ingesta y clasificación de reportes")
-        self.llm = llm
+        self.llm, self.obs, self.modelo = llm, obs or Observabilidad(None), modelo or "desconocido"
 
     @message_handler
     async def procesar(self, message: LoteReportes, ctx: MessageContext) -> LoteRegistros:
@@ -105,13 +106,20 @@ class AgenteIngesta(RoutedAgent):
 
     async def _contrastar_con_llm(self, reg: RegistroAfectacion) -> None:
         """El modelo solo interpreta; si discrepa de la regla no sobrescribe: baja la confianza y pide revisión."""
+        # El texto ciudadano no se envía a Langfuse: se registran el prompt y la clasificación por reglas como contexto.
+        entrada = [{"role": "system", "content": PROMPT_LLM},
+                   {"role": "user", "content": "[texto del reporte omitido por privacidad]"}]
         try:
-            r = await self.llm.create(
-                [SystemMessage(content=PROMPT_LLM), UserMessage(content=reg.descripcion_original, source="reporte")],
-                json_output=True,
-            )
-            sug = json.loads(str(r.content))
-            tipo = TipoAfectacion(sug["tipo"])
+            with self.obs.generacion("contrastar-clasificacion", self.modelo, entrada) as gen:
+                r = await self.llm.create(
+                    [SystemMessage(content=PROMPT_LLM), UserMessage(content=reg.descripcion_original, source="reporte")],
+                    json_output=True,
+                )
+                sug = json.loads(str(r.content))
+                tipo = TipoAfectacion(sug["tipo"])
+                gen.resultado({"tipo_sugerido": tipo.value},
+                              usage={"input": r.usage.prompt_tokens, "output": r.usage.completion_tokens},
+                              id_afectacion=reg.id_afectacion, tipo_por_reglas=reg.tipo_afectacion.value)
         except Exception as e:  # noqa: BLE001
             log.warning("Modelo de IA no disponible para %s: %s", reg.id_afectacion, type(e).__name__)
             reg.observaciones.append(f"Modelo de IA no disponible ({type(e).__name__}); se mantiene la clasificación por reglas.")

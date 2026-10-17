@@ -6,12 +6,35 @@ contactos ni secretos. Cualquier fallo de Langfuse se registra en el log y no in
 """
 
 import logging
+import re
 from contextlib import contextmanager
 from typing import Any, Iterator
 
 from water_coordinator.config import Settings
 
 log = logging.getLogger(__name__)
+
+NOMBRE_TRAZA = "procesar-reportes"
+# Nombres de observación: verbo + objeto, estables (los usan filtros y evaluadores en Langfuse).
+ETAPAS = {"A1": "clasificar-reportes", "A2": "geolocalizar-afectaciones", "A3": "priorizar-afectaciones",
+          "A4": "planificar-recursos", "A6": "redactar-mensajes"}
+
+# Defensa en profundidad: aunque el código no envía contactos, se enmascaran patrones de contacto/teléfono.
+_PATRONES_SENSIBLES = [re.compile(r"\bsim:[\w\-]+"), re.compile(r"\+?507[\s-]?\d{3,4}[\s-]?\d{4}"),
+                       re.compile(r"\b\d{4}-\d{4}\b")]
+
+
+def enmascarar(*, data: Any, **_: Any) -> Any:
+    """MaskFunction de Langfuse: reemplaza contactos y teléfonos en cualquier texto enviado."""
+    if isinstance(data, str):
+        for p in _PATRONES_SENSIBLES:
+            data = p.sub("[oculto]", data)
+        return data
+    if isinstance(data, dict):
+        return {k: enmascarar(data=v) for k, v in data.items()}
+    if isinstance(data, (list, tuple)):
+        return [enmascarar(data=v) for v in data]
+    return data
 
 
 class Etapa:
@@ -20,8 +43,8 @@ class Etapa:
     def __init__(self, span: Any | None):
         self.span = span
 
-    def resultado(self, salida: dict, **metadata: Any) -> None:
-        self._actualizar(output=salida, metadata=metadata or None)
+    def resultado(self, salida: Any, usage: dict[str, int] | None = None, **metadata: Any) -> None:
+        self._actualizar(output=salida, metadata=metadata or None, usage_details=usage)
 
     def error(self, exc: BaseException) -> None:
         self._actualizar(level="ERROR", status_message=type(exc).__name__)
@@ -44,16 +67,21 @@ class Observabilidad:
         return self.cliente is not None
 
     @contextmanager
-    def ejecucion(self, id_ejecucion: str, version_reglas: str, metadata: dict[str, str]) -> Iterator[Etapa]:
-        """Traza raíz de una ejecución del pipeline, con atributos propagados a las etapas."""
-        with self._observacion("pipeline", "chain", {"id_ejecucion": id_ejecucion, **metadata}) as etapa:
+    def ejecucion(self, id_ejecucion: str, version_reglas: str, origen: str, metadata: dict[str, str],
+                  entrada: dict | None = None) -> Iterator[Etapa]:
+        """Traza raíz de una ejecución del pipeline (una unidad de trabajo), con atributos propagados a las etapas.
+
+        Sin session_id: las ejecuciones no tienen continuidad entre sí. El id_ejecucion va en metadata para filtrar.
+        """
+        metadata = {"id_ejecucion": id_ejecucion, **metadata}
+        with self._observacion(NOMBRE_TRAZA, "chain", entrada, metadata=metadata) as etapa:
             ctx = None
             if self.cliente is not None:
                 try:
                     from langfuse import propagate_attributes
 
-                    ctx = propagate_attributes(trace_name="water-coordinator.pipeline", session_id=id_ejecucion,
-                                               version=version_reglas, tags=["prototipo"], metadata=metadata)
+                    ctx = propagate_attributes(trace_name=NOMBRE_TRAZA, version=version_reglas,
+                                               tags=["prototipo", origen], metadata=metadata)
                     ctx.__enter__()
                 except Exception as e:  # noqa: BLE001
                     log.warning("Langfuse: no se pudieron propagar atributos (%s)", type(e).__name__)
@@ -70,12 +98,16 @@ class Observabilidad:
     def etapa(self, nombre: str, entrada: dict | None = None):
         return self._observacion(nombre, "agent", entrada)
 
+    def generacion(self, nombre: str, modelo: str, entrada: Any):
+        """Llamada a un modelo de IA: tipo generation, con el nombre del modelo para que Langfuse calcule el costo."""
+        return self._observacion(nombre, "generation", entrada, model=modelo)
+
     @contextmanager
-    def _observacion(self, nombre: str, tipo: str, entrada: dict | None) -> Iterator[Etapa]:
+    def _observacion(self, nombre: str, tipo: str, entrada: Any, **extra: Any) -> Iterator[Etapa]:
         cm = span = None
         if self.cliente is not None:
             try:
-                cm = self.cliente.start_as_current_observation(name=nombre, as_type=tipo, input=entrada)
+                cm = self.cliente.start_as_current_observation(name=nombre, as_type=tipo, input=entrada, **extra)
                 span = cm.__enter__()
             except Exception as e:  # noqa: BLE001
                 log.warning("Langfuse: no se pudo abrir '%s' (%s)", nombre, type(e).__name__)
@@ -115,7 +147,13 @@ def crear_observabilidad(s: Settings) -> Observabilidad:
     try:
         from langfuse import Langfuse, is_langfuse_span
 
+        import os
+
+        from water_coordinator import __version__
+
+        os.environ.setdefault("OTEL_SERVICE_NAME", "water-coordinator")  # si no, Langfuse muestra "unknown_service"
         cliente = Langfuse(
+            release=__version__,
             public_key=s.langfuse_public_key.get_secret_value(),
             secret_key=s.langfuse_secret_key.get_secret_value(),
             base_url=s.langfuse_base_url,
@@ -123,6 +161,7 @@ def crear_observabilidad(s: Settings) -> Observabilidad:
             tracing_enabled=True,
             # Solo spans propios: los spans internos de AutoGen o de clientes de IA llevan el contenido de los mensajes.
             should_export_span=is_langfuse_span,
+            mask=enmascarar,
         )
         return Observabilidad(cliente)
     except Exception as e:  # noqa: BLE001

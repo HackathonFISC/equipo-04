@@ -28,8 +28,8 @@ class ClienteFalso:
     def __init__(self):
         self.registro, self.vaciado = [], 0
 
-    def start_as_current_observation(self, *, name, as_type="span", input=None, **_):
-        self.registro.append(("start", name, {"as_type": as_type, "input": input}))
+    def start_as_current_observation(self, *, name, as_type="span", input=None, **extra):
+        self.registro.append(("start", name, {"as_type": as_type, "input": input, **extra}))
 
         @contextmanager
         def cm():
@@ -68,9 +68,10 @@ async def test_traza_con_etapas_de_cada_agente_y_sin_datos_sensibles(repo):
     cliente = ClienteFalso()
     res = await _ejecutar(repo, Observabilidad(cliente))
     abiertos = [n for tipo, n, _ in cliente.registro if tipo == "start"]
-    assert abiertos == ["pipeline", "A1 ingesta", "A2 geolocalizacion", "A3 priorizacion", "A4 planificacion", "A6 comunicacion"]
-    raiz = next(d for t, n, d in cliente.registro if t == "start" and n == "pipeline")
-    assert raiz["input"]["id_ejecucion"] == res.id_ejecucion
+    assert abiertos == ["procesar-reportes", "clasificar-reportes", "geolocalizar-afectaciones", "priorizar-afectaciones",
+                        "planificar-recursos", "redactar-mensajes"]
+    raiz = next(d for t, n, d in cliente.registro if t == "start" and n == "procesar-reportes")
+    assert raiz["metadata"]["id_ejecucion"] == res.id_ejecucion and raiz["input"]["reportes"] == 1
     enviado = json.dumps(cliente.registro, default=str, ensure_ascii=False)
     assert "Juana" not in enviado and CONTACTO not in enviado and TEXTO_PRIVADO not in enviado
     assert '"envio": "simulado_no_enviado"' in enviado
@@ -89,13 +90,13 @@ async def test_error_del_pipeline_se_marca_y_se_propaga(repo):
     cliente = ClienteFalso()
     obs = Observabilidad(cliente)
     try:
-        with obs.etapa("A1 ingesta"):
+        with obs.etapa("clasificar-reportes"):
             raise ValueError("fallo de prueba")
     except ValueError:
         pass
     else:
         raise AssertionError("la excepción debía propagarse")
-    assert ("update", "A1 ingesta", {"level": "ERROR", "status_message": "ValueError"}) in cliente.registro
+    assert ("update", "clasificar-reportes", {"level": "ERROR", "status_message": "ValueError"}) in cliente.registro
 
 
 def test_vaciar_llama_flush():
@@ -116,3 +117,29 @@ async def test_cliente_real_con_servidor_inaccesible_no_rompe(repo, caplog):
         obs.cliente.shutdown()
     assert res.planes.planes
     assert "sk-lf-PRUEBA-222" not in caplog.text
+
+
+async def test_llamada_al_modelo_es_generation_con_modelo_y_tokens(repo):
+    import json as _json
+
+    from autogen_core.models import CreateResult, RequestUsage
+    from autogen_ext.models.replay import ReplayChatCompletionClient
+
+    respuesta = CreateResult(finish_reason="stop", content=_json.dumps({"tipo": "falta_de_agua", "justificacion": "x"}),
+                             usage=RequestUsage(prompt_tokens=120, completion_tokens=9), cached=False)
+    cliente = ClienteFalso()
+    r = reporte(TEXTO_PRIVADO, contacto=CONTACTO)
+    await procesar([r], repo, RECIBIDO, HORARIOS_POR_DEFECTO, llm=ReplayChatCompletionClient([respuesta]),
+                   obs=Observabilidad(cliente), modelo="claude-sonnet-5-5")
+    gen = next(d for t, n, d in cliente.registro if t == "start" and n == "contrastar-clasificacion")
+    assert gen["as_type"] == "generation" and gen["model"] == "claude-sonnet-5-5"
+    salida = next(d for t, n, d in cliente.registro if t == "update" and n == "contrastar-clasificacion")
+    assert salida["usage_details"] == {"input": 120, "output": 9}
+    assert "Juana" not in _json.dumps(cliente.registro, default=str, ensure_ascii=False)
+
+
+def test_mascara_oculta_contactos_y_telefonos():
+    from water_coordinator.services.observabilidad import enmascarar
+
+    datos = {"a": "llamar a sim:usuario-001 o al +507 6123-4567", "b": ["6123-4567", 3]}
+    assert enmascarar(data=datos) == {"a": "llamar a [oculto] o al [oculto]", "b": ["[oculto]", 3]}

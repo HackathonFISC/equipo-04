@@ -260,6 +260,9 @@
         const estadoPlan = Object.fromEntries(incidentes.filter(i => i.plan).map(i => [i.plan.id_plan, i.plan.estado]));
         document.getElementById('adminKpiReports').textContent = incidentes.length;
         document.getElementById('adminKpiDeliveries').textContent = incidentes.filter(i => i.plan && i.plan.estado === 'ejecutado').length;
+        apiFetch('/api/communities').then(({ total }) => {
+          document.getElementById('adminKpiCommunities').textContent = total;  // comunidades del catálogo territorial
+        }).catch(() => {});
         if (eventos.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8;">Sin actividad registrada de los agentes.</td></tr>';
           return;

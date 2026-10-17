@@ -4,7 +4,7 @@ Ejecución: `uv run pytest -q`. No requiere credenciales ni Internet.
 
 ## Última ejecución: 2026-10-17
 
-**106 aprobadas, 5 omitidas**, en unos 15 s. Antes eran 77; hay 28 nuevas de la API y Langfuse y 1 de `demo --reiniciar`.
+**111 aprobadas, 5 omitidas**, en unos 11 s. Además de las 106 anteriores, hay pruebas nuevas del extractor de ubicación, el catálogo de comunidades, `/api/communities`, la `generation` de Langfuse con modelo y tokens, y la máscara.
 
 | Archivo | Cubre | Pruebas |
 | --- | --- | --- |
@@ -44,3 +44,9 @@ Con los servidores de la usuaria en `127.0.0.1:8000` y `127.0.0.1:5500`, y los d
 
 - **Estadísticas:** se ven 6 reportes; el período 2026-10-17; la dona con 5 pendientes de aprobación y 1 pendiente de información; los distritos (La Chorrera 2, Arraiján 2, Capira 1, Sin distrito 1) y la tendencia de un solo día.
 - **Mapa:** carga las teselas de OSM con su atribución y marca las afectaciones que tienen coordenadas estimadas. Las que no tienen coordenadas no se dibujan.
+
+## Verificación manual: comunidades y mapa (2026-10-17)
+
+- **Pestaña Comunidades:** muestra 16 comunidades. Barrio Colón aparece con 1 incidente, 700 personas estimadas y estado «Pendiente de aprobación»; las demás, «Sin reportes». El KPI de comunidades afectadas es 2.
+- **Mapa:** muestra 4 marcadores con coordenadas reales de Nominatim.
+- **Error detectado y corregido:** un `ReferenceError` (`comunidadesMensaje` usada antes de declararse) detenía el script de `gestion.html`.

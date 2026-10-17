@@ -13,6 +13,7 @@ async function apiFetch(path, options = {}) {
   try {
     res = await fetch(`${API_BASE}${path}`, {
       ...options,
+      cache: 'no-store', // el panel siempre muestra el estado actual del backend
       headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
       signal: controller.signal,
     });

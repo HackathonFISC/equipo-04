@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     model_name: str = ""
     model_api_key: SecretStr | None = None
     model_base_url: str = ""
+    # Solo Anthropic: ID del workspace si la clave no está asociada a uno (cabecera anthropic-workspace-id).
+    model_workspace_id: str = ""
 
     # Geocodificación (Nominatim). provider: none | nominatim
     geocoder_provider: str = "none"

@@ -30,7 +30,9 @@ def crear_cliente(s: Settings) -> ChatCompletionClient | None:
     if s.model_provider == "anthropic":
         from autogen_ext.models.anthropic import AnthropicChatCompletionClient
 
-        return AnthropicChatCompletionClient(model=s.model_name, api_key=clave)
+        # autogen-ext 0.7.x requiere anthropic<1: el SDK 1.x ya no acepta el `temperature` que autogen-ext envía siempre.
+        cabeceras = {"anthropic-workspace-id": s.model_workspace_id} if s.model_workspace_id else None
+        return AnthropicChatCompletionClient(model=s.model_name, api_key=clave, default_headers=cabeceras)
     from autogen_ext.models.openai import OpenAIChatCompletionClient
 
     if s.model_provider == "openai_compatible":

@@ -59,7 +59,7 @@ uv run water-coordinator estado --comprobar
 | --- | --- | --- |
 | **Ollama local** (gratis) | `MODEL_PROVIDER=openai_compatible`, `MODEL_BASE_URL=http://localhost:11434/v1`, `MODEL_NAME=<modelo descargado>` | Instalar desde https://ollama.com. Sin costo por uso; necesita RAM o GPU. |
 | **OpenAI** | `MODEL_PROVIDER=openai`, `MODEL_NAME`, `MODEL_API_KEY` | Clave en https://platform.openai.com/api-keys. Pago por token: https://openai.com/api/pricing |
-| **Anthropic (Claude)** | `MODEL_PROVIDER=anthropic`, `MODEL_NAME` (p. ej. `claude-sonnet-5-5`), `MODEL_API_KEY` | Clave en https://console.anthropic.com. Pago por token: https://www.anthropic.com/pricing |
+| **Anthropic (Claude)** | `MODEL_PROVIDER=anthropic`, `MODEL_NAME` (p. ej. `claude-sonnet-5-5`), `MODEL_API_KEY` y, si la clave no está asociada a un workspace, `MODEL_WORKSPACE_ID` (en la consola, *Settings → Workspaces*) | Clave en https://console.anthropic.com. Pago por token: https://www.anthropic.com/pricing |
 | Otro endpoint compatible con OpenAI | `openai_compatible` + `MODEL_BASE_URL` (+ `MODEL_API_KEY` si lo exige) | Según el proveedor. |
 
 - **Para qué se usa:** el modelo solo **interpreta texto**: contrasta la clasificación del Agente 1. Los cálculos de prioridad, demanda, cobertura y rutas son deterministas y no cambian al cambiar de modelo.
@@ -134,17 +134,20 @@ uv run water-coordinator estado --comprobar
 - **SDK:** `langfuse` 5.0.2 (basado en OpenTelemetry). La integración usa `Langfuse(...)`, `start_as_current_observation` y `propagate_attributes`.
 - **Cuenta:** Langfuse Cloud (tiene plan gratuito con límites) o una instancia propia. Crea un proyecto y genera un par de claves en *Settings → API Keys*.
 - **Variables:** `LANGFUSE_TRACING_ENABLED=true`, `LANGFUSE_PUBLIC_KEY` (`pk-lf-…`), `LANGFUSE_SECRET_KEY` (`sk-lf-…`) y `LANGFUSE_BASE_URL` (p. ej. `https://cloud.langfuse.com` o `https://us.cloud.langfuse.com`, según la región del proyecto).
-- **Qué se envía:**
-  - Una traza por ejecución del pipeline (`water-coordinator.pipeline`), con `session_id = id_ejecucion` y `version = versión de reglas`.
-  - Una observación de tipo *agent* por etapa (A1, A2, A3, A4, A6), con su duración, un resumen del resultado (conteos, estados, prioridades, coberturas) y su nivel `ERROR` si falla.
+- **Qué se envía** (según la skill oficial `langfuse` y https://langfuse.com/docs/observability/best-practices):
+  - Una traza `procesar-reportes` por ejecución, con `version` igual a la versión de reglas, `environment = APP_ENV`, etiquetas `prototipo` y `cli-demo` o `api`, y `id_ejecucion` en metadata.
+  - Observaciones de tipo *agent* para cada etapa: `clasificar-reportes` (A1), `geolocalizar-afectaciones` (A2), `priorizar-afectaciones` (A3), `planificar-recursos` (A4) y `redactar-mensajes` (A6). Cada una lleva su duración, un resumen del resultado y nivel `ERROR` si falla.
+  - La llamada a Claude, como `generation` (`contrastar-clasificacion`), con el modelo y los tokens reales de entrada y salida. Así Langfuse calcula el costo.
+  - Una máscara (`mask`) que oculta contactos y teléfonos antes del envío.
 - **Qué NO se envía:**
   - Textos de reportes, contactos ni secretos.
   - Los spans internos de AutoGen ni de los clientes de IA: el runtime usa `NoOpTracerProvider` y el exportador filtra con `is_langfuse_span`.
-  - Llamadas de modelo ni métricas de consumo: el sistema no las mide hoy y no se inventan.
+  - El texto de los reportes: la generación muestra el prompt de sistema y el texto «[texto del reporte omitido por privacidad]».
 - **Tolerancia a fallos:** si Langfuse falla o no está configurado, se registra un aviso en el log y el pipeline y la API siguen funcionando.
 - **Envío de pendientes:**
   - La CLI hace `flush` al terminar `demo`.
   - La API hace `flush` después de cada `POST /api/incidents` y al apagarse.
+- **Comprobar desde código:** las organizaciones creadas desde el 16-09-2026 ya no tienen `GET /api/public/traces` (devuelve 410). Hay que usar `GET /api/public/v2/observations?fromStartTime=…&toStartTime=…&fields=core,basic,io,metadata,trace_context`.
 - **Costo:** según el plan de Langfuse. No se activa nada de pago automáticamente.
 
 ---

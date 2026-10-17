@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from water_coordinator.persistence.repository import Repositorio
+from water_coordinator.services.territorio import catalogo
 from water_coordinator.schemas.models import (
     Categoria, Certeza, Confianza, Coordenadas, DecisionSupervisor, Estado, MensajeSaliente, PlanPropuesto, Prioridad,
     RegistroAfectacion, ReporteEntrada, TipoAfectacion, UbicacionNormalizada,
@@ -42,7 +43,9 @@ class IncidenteVista(BaseModel):
     estado_registro: Estado
     estado_actual: Estado  # el del plan si existe; si no, el del registro
     ubicacion_reportada: str | None
-    zona: str | None = None
+    zona: str | None = None  # distrito
+    comunidad: str | None = None
+    personas_estimadas: float | None = None
     certeza_ubicacion: Certeza | None = None
     coordenadas: Coordenadas | None = None  # solo si las dio el geocodificador; nunca inventadas
     categoria: Categoria | None = None
@@ -119,14 +122,14 @@ def listar_incidentes(repo: Repositorio, estado: Estado | None = None, tipo: Tip
             confianza_clasificacion=r.confianza_clasificacion, metodo_clasificacion=r.metodo_clasificacion,
             estado_registro=r.estado, estado_actual=plan.estado if plan else r.estado,
             ubicacion_reportada=r.ubicacion_reportada, alerta_sanitaria=r.alerta_sanitaria,
-            zona=u.zona_comunidad if u else None, certeza_ubicacion=u.estado_certeza if u else None,
+            zona=u.zona_comunidad if u else None, comunidad=u.comunidad if u else None, certeza_ubicacion=u.estado_certeza if u else None,
             coordenadas=u.coordenadas if u else None,
             plan=_resumen_plan(plan, decisiones) if plan else None,
         )
         if pr:
             v = v.model_copy(update={
                 "categoria": pr.categoria_instalacion, "nivel_jerarquia": pr.nivel_jerarquia, "T": pr.T, "V": pr.V,
-                "A": pr.A, "P": pr.puntuacion_P, "rango_P": pr.rango_P, "requiere_revision_humana": pr.requiere_revision_humana,
+                "A": pr.A, "P": pr.puntuacion_P, "personas_estimadas": pr.personas_estimadas, "rango_P": pr.rango_P, "requiere_revision_humana": pr.requiere_revision_humana,
             })
         if (estado is None or v.estado_actual == estado) and (tipo is None or v.tipo_afectacion == tipo):
             out.append(v)
@@ -152,3 +155,30 @@ def listar_eventos(repo: Repositorio, limite: int) -> list[EventoVista]:
     eventos = repo.eventos()[-limite:]
     return [EventoVista(seq=e["seq"], fecha=e["fecha"], agente=e["agente"], tipo=e["tipo"], ref_id=e["ref_id"],
                         version_reglas=e["version_reglas"]) for e in reversed(eventos)]
+
+
+class ComunidadVista(BaseModel):
+    comunidad: str
+    distrito: str
+    incidentes: int
+    estado_reciente: Estado | None  # estado actual del incidente más reciente; None si no hay reportes
+    tipos: list[TipoAfectacion]
+    personas_estimadas: float | None  # suma de las estimaciones del Agente 3 (promedios de ocupación)
+    ultima_actualizacion: datetime | None
+
+
+def listar_comunidades(repo: Repositorio) -> list[ComunidadVista]:
+    """Catálogo territorial con los incidentes procesados que el Agente 2 asoció a cada comunidad."""
+    incidentes = listar_incidentes(repo)  # ya ordenados del más reciente al más antiguo
+    out = []
+    for c in catalogo():
+        propios = [i for i in incidentes if i.comunidad == c["comunidad"] and i.zona == c["distrito"]]
+        personas = [i.personas_estimadas for i in propios if i.personas_estimadas is not None]
+        out.append(ComunidadVista(
+            comunidad=c["comunidad"], distrito=c["distrito"], incidentes=len(propios),
+            estado_reciente=propios[0].estado_actual if propios else None,
+            tipos=sorted({i.tipo_afectacion for i in propios}, key=list(TipoAfectacion).index),
+            personas_estimadas=sum(personas) if personas else None,
+            ultima_actualizacion=propios[0].recibido_en if propios else None,
+        ))
+    return out

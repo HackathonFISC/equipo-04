@@ -152,7 +152,7 @@ def extraer_datos(texto: str) -> dict:
 
 
 _UBICACION = re.compile(
-    r"\b(?:en|desde|ubicad[oa]s? en|sector|barriada|comunidad de)\s+((?:la |el |los |las )?[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ\.]*(?:[ ,]+(?:de |del |la |el )?[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ\.]*)*)"
+    r"\b(?:en|desde|ubicad[oa]s? en|sector|barriada|comunidad de)\s+((?:la |el |los |las )?[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ]*(?:[ ,]+(?:de |del |la |el )?[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ]*)*)"
 )
 
 

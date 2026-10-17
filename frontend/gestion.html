@@ -132,11 +132,13 @@
           <label>Estado</label>
           <select id="commStatusFilter">
             <option value="">Todos los estados</option>
-            <option value="Sin agua">Sin agua</option>
-            <option value="Reporte recibido">Reporte recibido</option>
-            <option value="En revisión">En revisión</option>
-            <option value="Incidencia confirmada">Incidencia confirmada</option>
-            <option value="Servicio restablecido">Servicio restablecido</option>
+            <option value="sin_reportes">Sin reportes</option>
+            <option value="pendiente_de_aprobacion">Pendiente de aprobación</option>
+            <option value="pendiente_de_revision">Pendiente de revisión</option>
+            <option value="pendiente_de_informacion">Pendiente de información</option>
+            <option value="aprobado">Aprobado</option>
+            <option value="rechazado">Rechazado</option>
+            <option value="ejecutado">Ejecutado</option>
           </select>
         </div>
       </div>
@@ -457,15 +459,8 @@
     renderReportes();
 
     /* ---------- Comunidades ---------- */
-    const incidents = []; // TODO: cargar desde los servicios de comunidades e incidencias.
-    const statusMap = {
-      'Sin agua': 'badge-critical',
-      'Reporte recibido': 'badge-cyan',
-      'En revisión': 'badge-purple',
-      'Incidencia confirmada': 'badge-orange',
-      'Cisterna programado': 'badge-blue',
-      'Servicio restablecido': 'badge-green',
-    };
+    const incidents = []; // Comunidades del catálogo (GET /api/communities, ver cargarComunidades).
+    let comunidadesMensaje = 'Cargando comunidades…';
 
     function renderComunidades() {
       const list = document.getElementById('communitiesList');
@@ -477,7 +472,7 @@
       );
       list.innerHTML = '';
       if (data.length === 0) {
-        list.innerHTML = '<div class="empty-state" style="padding:2rem;"><h3>Comunidades</h3><p>Conecta el servicio de comunidades para mostrar resultados.</p></div>';
+        list.innerHTML = `<div class="empty-state" style="padding:2rem;"><h3>Comunidades</h3><p>${esc(comunidadesMensaje)}</p></div>`;
         return;
       }
       data.forEach(inc => {
@@ -486,15 +481,15 @@
         card.innerHTML = `
           <div class="flex items-start justify-between mb-2">
             <div class="flex-1">
-              <h3 class="card-title" style="margin-bottom:0.25rem;">${inc.name}</h3>
-              <p class="card-text" style="margin-bottom:0.75rem; font-size:0.85rem;">${inc.district} · ${inc.corregimiento}</p>
+              <h3 class="card-title" style="margin-bottom:0.25rem;">${esc(inc.name)}</h3>
+              <p class="card-text" style="margin-bottom:0.75rem; font-size:0.85rem;">${esc(inc.district)} · ${esc(inc.corregimiento)}</p>
             </div>
-            <span class="badge-status ${statusMap[inc.status]}">${inc.status}</span>
+            ${inc.status === 'sin_reportes' ? '<span class="badge-status badge-slate">Sin reportes</span>' : estadoBadge(inc.status)}
           </div>
           <div style="display:flex; justify-content:space-between; align-items:end; margin-top:1rem;">
             <div class="detail-item" style="margin:0; font-size:0.85rem;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>${inc.people} personas (est.)</span>
+              <span>${esc(inc.people)} personas (est.)</span>
             </div>
             <span style="font-size:0.8rem; color:#64748b;">${inc.updated}</span>
           </div>
@@ -507,7 +502,7 @@
     function openDetail(inc) {
       const panel = document.getElementById('communityDetail');
       document.getElementById('detailTitle').textContent = inc.name;
-      document.getElementById('detailStatus').textContent = inc.status;
+      document.getElementById('detailStatus').textContent = inc.status === 'sin_reportes' ? 'Sin reportes' : estadoLabel(inc.status);
       document.getElementById('detailType').textContent = inc.type;
       document.getElementById('detailPeople').textContent = inc.people + ' (est.)';
       document.getElementById('detailUpdated').textContent = inc.updated;
@@ -726,6 +721,27 @@
       renderEstadisticas(byDistrict, byStatus, weeklyReports);
     }
 
+    /* ---------- Comunidades (GET /api/communities) ---------- */
+    async function cargarComunidades() {
+      try {
+        const { items } = await apiFetch('/api/communities');
+        incidents.splice(0, incidents.length, ...items.map(c => ({
+          name: c.comunidad,
+          district: c.distrito,
+          corregimiento: `${c.incidentes} incidente${c.incidentes === 1 ? '' : 's'}`,
+          status: c.estado_reciente || 'sin_reportes',
+          people: c.personas_estimadas ?? '—',
+          type: c.tipos.length ? c.tipos.map(t => TIPOS[t] || t).join(', ') : 'Sin incidentes',
+          updated: c.ultima_actualizacion ? fechaCorta(c.ultima_actualizacion) : '—',
+        })));
+        comunidadesMensaje = 'No hay comunidades que coincidan con el filtro.';
+        document.getElementById('kpiCommunities').textContent = items.filter(c => c.incidentes > 0).length;
+      } catch (e) {
+        comunidadesMensaje = `No se pudieron cargar las comunidades: ${e.message}`;
+      }
+      renderComunidades();
+    }
+
     /* ---------- Mapa (Leaflet + teselas OpenStreetMap) ---------- */
     // Solo se dibujan coordenadas reales del geocodificador; si no hay ninguna, se mantiene el aviso.
     let mapa = null;
@@ -853,10 +869,14 @@
     document.addEventListener('click', async (ev) => {
       const boton = ev.target.closest('button[data-plan]');
       if (!boton || boton.disabled) return;
-      if (await decidirPlan(boton.dataset.plan, boton.dataset.decision, boton)) cargarIncidentes();
+      if (await decidirPlan(boton.dataset.plan, boton.dataset.decision, boton)) {
+        cargarIncidentes();
+        cargarComunidades();
+      }
     });
 
     cargarIncidentes();
+    cargarComunidades();
   </script>
 </body>
 </html>

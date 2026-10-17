@@ -15,7 +15,8 @@ from water_coordinator.persistence.repository import ErrorPersistencia, Reposito
 from water_coordinator.schemas.models import DecisionSupervisor, Estado, ReporteEntrada, TipoAfectacion, ahora
 from water_coordinator.services.aprobacion import ErrorAprobacion, registrar_decision
 from water_coordinator.services.consultas import (
-    EventoVista, IncidenteVista, MensajeVista, listar_eventos, listar_incidentes, listar_mensajes,
+    ComunidadVista, EventoVista, IncidenteVista, MensajeVista, listar_comunidades, listar_eventos, listar_incidentes,
+    listar_mensajes,
 )
 from water_coordinator.services.faq import FAQ
 from water_coordinator.services.observabilidad import Observabilidad
@@ -110,7 +111,7 @@ async def registrar_incidente(body: ReporteNuevo, repo: Repositorio = Depends(ge
     datos.setdefault("recibido_en", ahora())
     reporte = ReporteEntrada(**datos)
     try:
-        res = await procesar_configurado(s, [reporte], repo, reporte.recibido_en, obs)
+        res = await procesar_configurado(s, [reporte], repo, reporte.recibido_en, obs, origen="api")
     except ErrorPersistencia:
         raise HTTPException(409, f"El reporte {reporte.id_reporte} ya existe; no se duplica.")
     finally:
@@ -124,6 +125,13 @@ async def registrar_incidente(body: ReporteNuevo, repo: Repositorio = Depends(ge
         advertencia="Cada reporte se planifica en su propio lote: el Agente 4 no conoce las cisternas asignadas en "
                     "lotes anteriores (limitación documentada).",
     )
+
+
+@router.get("/api/communities", tags=["panel"])
+def comunidades(repo: Repositorio = Depends(get_repo)) -> Lista[ComunidadVista]:
+    """Catálogo de comunidades de La Chorrera y Arraiján con sus incidentes procesados."""
+    items = listar_comunidades(repo)
+    return Lista(total=len(items), items=items)
 
 
 @router.get("/api/messages", tags=["panel"])

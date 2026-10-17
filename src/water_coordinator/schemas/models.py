@@ -141,7 +141,8 @@ class UbicacionNormalizada(BaseModel):
     ubicacion_normalizada: str | None
     coordenadas: Coordenadas | None = None
     estado_certeza: Certeza
-    zona_comunidad: str | None = None
+    zona_comunidad: str | None = None  # distrito
+    comunidad: str | None = None  # corregimiento del catálogo territorial, si se reconoce
     alternativas: list[str] = Field(default_factory=list)
     instalaciones_criticas_cercanas: list[str] = Field(default_factory=list)
     observaciones_geograficas: list[str] = Field(default_factory=list)

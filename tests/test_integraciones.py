@@ -111,3 +111,15 @@ def test_env_example_carga_sin_errores_y_sin_secretos():
     s = Settings(_env_file=Path(__file__).parents[1] / ".env.example")
     assert s.model_provider == "none" and s.organizacion_lat is None and s.horarios_file is None
     assert s.storage_retention_days is None and s.model_api_key is None and not s.whatsapp_send_enabled
+
+
+async def test_comunidad_del_catalogo_y_contradiccion():
+    from water_coordinator.services.territorio import COMUNIDADES
+
+    assert len(COMUNIDADES["La Chorrera"]) >= 3 and len(COMUNIDADES["Arraiján"]) >= 3
+    u = await ubicar(registro("#sinagua en Vista Alegre, Arraiján"), None)
+    assert (u.comunidad, u.zona_comunidad, u.estado_certeza) == ("Vista Alegre", "Arraiján", Certeza.APROXIMADA)
+    u = await ubicar(registro("#sinagua en Barrio Colón"), None)  # distrito inferido del catálogo
+    assert (u.comunidad, u.zona_comunidad) == ("Barrio Colón", "La Chorrera")
+    u = await ubicar(registro("#sinagua en Burunga, La Chorrera"), None)  # Burunga es de Arraiján
+    assert u.estado_certeza == Certeza.AMBIGUA and len(u.alternativas) == 2

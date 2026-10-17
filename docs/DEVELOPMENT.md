@@ -92,6 +92,7 @@ En VS Code o en la app de Claude, `.claude/launch.json` define las configuracion
 | `GET /health` | Estado de la API, la base de datos y Langfuse. |
 | `GET /api/incidents?estado=&tipo=` | Afectaciones procesadas, con prioridad y plan. Sin contactos ni textos originales. |
 | `POST /api/incidents` | Registra un reporte (canal de prueba) y ejecuta el pipeline para ese reporte. |
+| `GET /api/communities` | Catálogo de comunidades (La Chorrera y Arraiján) con sus incidentes procesados. |
 | `GET /api/messages` | Mensajes propuestos por el Agente 6 (`envio: simulado_no_enviado`) y el estado actual de su plan. |
 | `GET /api/faq` | Preguntas frecuentes del panel. |
 | `GET /api/agent-events?limite=20` | Últimos eventos de traza de los agentes (sin su contenido). |

@@ -35,6 +35,7 @@ flowchart LR
 | Configuración | `config.py`, `.env` | pydantic-settings. Los secretos usan `SecretStr`. |
 | Entrada | `main.py` | CLI: `demo`, `aprobar`, `estado`, `traza`. |
 | API | `api/app.py`, `api/rutas.py` | FastAPI local (D-010): CORS restringido y errores de BD como 503 sin detalles. Las rutas solo traducen HTTP a los servicios. |
+| Territorio | `services/territorio.py` | Distritos de Panamá Oeste y comunidades (corregimientos) de La Chorrera y Arraiján; los usa el Agente 2. |
 | Consultas del panel | `services/consultas.py`, `services/faq.py` | Vistas de lectura (incidentes, mensajes, eventos) que combinan documentos persistidos sin ejecutar el pipeline; FAQ fijo. |
 | Observabilidad | `services/observabilidad.py` | Langfuse opcional: traza por ejecución y observación por agente; tolerante a fallos. |
 

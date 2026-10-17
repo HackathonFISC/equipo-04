@@ -9,6 +9,7 @@ from autogen_ext.models.replay import ReplayChatCompletionClient
 
 from conftest import RECIBIDO, registro, reporte
 from water_coordinator.agents.ingesta import AgenteIngesta, vincular_duplicados
+from water_coordinator.services.observabilidad import Observabilidad
 from water_coordinator.schemas.models import Confianza, Estado, TipoAfectacion as T
 from water_coordinator.services.clasificacion import EXPRESIONES, HASHTAGS, HASHTAGS_RELEVANCIA, clasificar
 
@@ -86,7 +87,7 @@ def test_duplicados_se_vinculan_sin_fusionar_y_contradiccion_en_revision():
 async def test_desacuerdo_del_modelo_baja_confianza_sin_sobrescribir():
     llm = ReplayChatCompletionClient([json.dumps({"tipo": "agua_contaminada", "justificacion": "x"})])
     agente = AgenteIngesta.__new__(AgenteIngesta)
-    agente.llm = llm
+    agente.llm, agente.obs, agente.modelo = llm, Observabilidad(None), "modelo-prueba"
     reg = registro("#sinagua en Capira")
     await agente._contrastar_con_llm(reg)
     assert reg.tipo_afectacion == T.FALTA_DE_AGUA
@@ -102,3 +103,11 @@ def test_keywords_md_y_codigo_coinciden():
     for frases in EXPRESIONES.values():
         for f in frases:
             assert f"`{f}`" in md, f
+
+
+def test_ubicacion_termina_en_el_punto():
+    from water_coordinator.services.clasificacion import extraer_ubicacion
+
+    assert extraer_ubicacion("Somos 3 edificios en Nuevo Chorrillo, Arraiján. Empezó el lunes.") == "Nuevo Chorrillo, Arraiján"
+    assert extraer_ubicacion("Le hablo de la escuela en Barrio Colón, La Chorrera. Se rompió la tubería") == "Barrio Colón, La Chorrera"
+    assert extraer_ubicacion("en Vista Alegre, Arraiján no hay agua") == "Vista Alegre, Arraiján"

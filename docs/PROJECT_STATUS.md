@@ -58,6 +58,17 @@
 - **`demo --reiniciar`:** vacía la base SQLite de desarrollo antes de cargar.
 - **`truststore`:** las conexiones HTTPS de Python usan el almacén de certificados de Windows. Con esto Nominatim funciona en esta máquina, verificado con consultas reales.
 
+### 2026-10-17: Claude, extractor, comunidades y Langfuse (sin commit)
+
+- **Claude:** se fijó `anthropic` 0.125 (el 1.x es incompatible con `autogen-ext` 0.7.5). Se añadió `MODEL_WORKSPACE_ID`. La prueba real llegó a Anthropic, que respondió 400 porque falta el workspace.
+- **Extractor de ubicación** corregido. Ahora hay 4 de 5 ubicaciones con coordenadas reales de Nominatim.
+- **Catálogo de comunidades:** 9 de La Chorrera y 7 de Arraiján.
+  - El Agente 2 reconoce la comunidad e infiere su distrito.
+  - Nuevo endpoint `GET /api/communities`.
+  - Pestaña Comunidades conectada, con los KPI de comunidades en el panel.
+- **Langfuse:** se instaló la skill oficial `langfuse` (github.com/langfuse/skills, commit `127253d`) en `~/.claude/skills/langfuse` y se ajustó la instrumentación a sus buenas prácticas (P-019). **Traza real verificada y auditada** con la skill: la ejecución `EJE-77d87e397f4e` (traza `0629628bfcf2d4ef62f50bf1f16ef507`) tiene la raíz `procesar-reportes` y 5 agentes hijas, entorno, versión de reglas, etiquetas `prototipo`/`cli-demo` y servicio `water-coordinator`, sin textos ni contactos. Tras la primera auditoría se mejoraron la entrada y la salida de la raíz y el nombre del servicio.
+- **Panel:** las peticiones usan `cache: 'no-store'`. Se corrigió un error de JavaScript (variable usada antes de declararse) que vaciaba la pestaña Comunidades.
+
 ## Decisiones
 
 - **Confirmadas:** D-001 a D-015 y DEC-C01 a DEC-C16 en [DECISIONS.md](DECISIONS.md). D-009 (no tocar el frontend) quedó obsoleta.
@@ -81,8 +92,10 @@
 | Comprobación | Resultado |
 | --- | --- |
 | `uv sync` | OK, con `system-certs` por la intercepción TLS. |
-| `uv run pytest -q` | **106 aprobadas, 5 omitidas**, en unos 15 s. |
-| Nominatim real | 2 coordenadas estimadas, 1 ubicación ambigua y 2 sin resultado por el defecto del extractor. |
+| `uv run pytest -q` | **111 aprobadas, 5 omitidas**, en unos 11 s. |
+| Nominatim real | Tras corregir el extractor: 4 de 5 ubicaciones con coordenadas (1 confirmada, 3 estimadas) y 1 ambigua (Vista Alegre). |
+| Claude real | Llega a la API con `anthropic` 0.125. Con `MODEL_WORKSPACE_ID` responde 404: el workspace no existe para esa clave. |
+| Langfuse real | `auth_check` correcto; traza real recuperada con la API v2 y auditada. |
 | API local (`uvicorn`, `curl`) | `/health` → `ok` con BD `ok`; `/docs` → 200; CORS devuelve `allow-origin` para `localhost:5500` y nada para un origen ajeno. |
 | Panel en el navegador | Datos, estados reales, decisión simulada, FAQ y error con la API caída comprobados; diseño conservado (ver `tests/testsresults.md`). |
 | Langfuse | Probado con un cliente simulado y con el SDK real contra un puerto cerrado. **Sin traza real verificada en un proyecto de Langfuse** (no se usaron credenciales). |
@@ -108,8 +121,7 @@
 
 ## Próximos pasos
 
-1. Decidir cómo corregir la incompatibilidad `autogen-ext` / `anthropic` y el extractor de ubicación.
-2. Verificar una traza real en Langfuse con credenciales del equipo.
+1. Corregir `MODEL_WORKSPACE_ID` (o usar una clave asociada a un workspace) y verificar la `generation` de Claude en Langfuse (modelo y tokens).
 3. Diseñar autenticación del supervisor antes de permitir aprobaciones reales por HTTP.
 4. Confirmar la lectura de C-02 (19:00–20:00).
 5. Incorporar DEC-C01 a DEC-C16 al documento de criterios (rev.5), si el equipo lo aprueba. DEC-C15 contradice DEC-01 del documento.

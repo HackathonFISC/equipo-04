@@ -163,3 +163,12 @@ def test_respuestas_sin_secretos_ni_contactos(cliente):
         for secreto in SECRETOS.values():
             assert secreto not in t
         assert CONTACTO not in t
+
+
+def test_comunidades_con_incidentes(cliente):
+    vacias = cliente.get("/api/communities").json()
+    assert vacias["total"] >= 6 and all(c["incidentes"] == 0 and c["estado_reciente"] is None for c in vacias["items"])
+    reportar(cliente, "#sinagua 10 casas en Guadalupe, La Chorrera desde ayer")
+    guadalupe = next(c for c in cliente.get("/api/communities").json()["items"] if c["comunidad"] == "Guadalupe")
+    assert guadalupe["incidentes"] == 1 and guadalupe["estado_reciente"] == "pendiente_de_aprobacion"
+    assert guadalupe["personas_estimadas"] == 30 and guadalupe["tipos"] == ["falta_de_agua"]
