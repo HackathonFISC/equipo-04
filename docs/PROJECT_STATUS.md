@@ -76,9 +76,23 @@
 - **Corrección tras la auditoría:** las generations quedaban colgando de la raíz porque el runtime de AutoGen ejecuta los agentes en otra tarea. Ahora se anidan bajo `clasificar-reportes`, comprobado en la traza `6aafea4690ff69a22ff1bf5338f434be`.
 - **Pendiente de la usuaria:** poner `MODEL_PROVIDER=claude_code` y `MODEL_NAME=claude-sonnet-5-5` en `.env`. Las verificaciones se hicieron con variables de entorno temporales, sin editar su `.env`.
 
+### 2026-10-17: revisión de SQLite y comprobación real de la base
+
+- **Revisión:** SQLite ya estaba integrado (`persistence/repository.py`, tablas `documentos` y `eventos`, creadas al abrir el `Repositorio`). No se crearon tablas, modelos ni conexiones nuevas. `.env` está ignorado por git y nunca se ha versionado; tampoco se versionan `*.db` ni `storage/`.
+- **`DATABASE_URL` de la usuaria:** apuntaba a `sqlite:///equipo-04/storage/water.db`, una ruta relativa que creaba una carpeta anidada. La usuaria la cambió a `sqlite:///./storage/water.db`.
+- **`estado --comprobar` (D-016):** ahora abre la base y ejecuta `SELECT 1`, y responde `CONNECTED` o `ERROR` (solo el tipo de error). En SQLite crea el archivo y las tablas si no existen. Sin `--comprobar` sigue en `CONFIGURED` y no toca la base.
+- **graphify:** no estaba instalado en esta máquina. Se instaló `graphifyy` 0.9.82 con `uv tool install --python 3.12` (perfil del usuario; con Python 3.15 fallaba al compilar `tree-sitter`). `graphify update src/water_coordinator` escribe en `src/water_coordinator/graphify-out/`: se copiaron `graph.json`, `graph.html` y `GRAPH_REPORT.md` a `graphify-out/` y se borró esa carpeta. Resultado: 463 nodos, 1.007 aristas, 27 comunidades.
+
+### 2026-10-17: carga de reportes del CSV del equipo
+
+- **Origen:** `reportes_incidencias_agua_panama_oeste.csv` (59 filas, datos ficticios aportados por la usuaria). Se convirtió a `data/reportes_panama_oeste.json` (ignorado por git) y se cargó con `MODEL_PROVIDER=none uv run water-coordinator demo --datos data/reportes_panama_oeste.json --sin-aprobacion`, sin código nuevo.
+- **Criterios aprobados por la usuaria:** se omiten las 17 filas de redes sociales (X e Instagram). Canales: WhatsApp → `whatsapp_simulado`; llamadas 311 y directas → `transcripcion_audio`; TikTok → `transcripcion_video`. Al mensaje original se antepone «Zona registrada en {corregimiento}, {distrito}.», porque el extractor del Agente 1 no capta referencias como «Cerca del minisúper…» (en una simulación previa, 0 de 42 ubicados sin la zona y 37 con ella). El resto de columnas (tipo, días, vulnerabilidad, prioridad sugerida, estado, incidente asociado) no se usa: el sistema las calcula. Momento de planificación: la hora de la carga. Sin IA; Nominatim activo.
+- **Resultado:** 42 reportes → 19 afectaciones validadas (14 falta de agua, 5 tubería rota) y 23 indeterminadas retenidas en el Agente 1 (20 pendientes de información, 3 de revisión). 19 planes: 5 pendientes de aprobación (cobertura 100 %) y 14 pendientes de información (faltan unidades afectadas para la demanda). P sin valor en las 19, por faltar V o A (se informa el rango). 0 mensajes: el CSV no trae contactos. 141 eventos. La API local devuelve los 42 incidentes.
+- **Hallazgos abiertos:** el extractor de ubicación corta en la primera palabra en minúscula o número («Sector», «Cerca», «Lote»); «Vacamonte» no está en el catálogo territorial; muchos mensajes con «sucia», «chocolate» o «turbia» quedan indeterminados con las palabras clave aprobadas (DEC-C13).
+
 ## Decisiones
 
-- **Confirmadas:** D-001 a D-015 y DEC-C01 a DEC-C16 en [DECISIONS.md](DECISIONS.md). D-009 (no tocar el frontend) quedó obsoleta.
+- **Confirmadas:** D-001 a D-016 y DEC-C01 a DEC-C16 en [DECISIONS.md](DECISIONS.md). D-009 (no tocar el frontend) quedó obsoleta.
 - **Conflictos:**
   - C-01: resuelto con DEC-C15 (compensación de la mitad del tiempo sin agua en la demanda).
   - C-03: resuelto con DEC-C16 (rango de carga por tipo).
@@ -99,7 +113,7 @@
 | Comprobación | Resultado |
 | --- | --- |
 | `uv sync` | OK, con `system-certs` por la intercepción TLS. |
-| `uv run pytest -q` | **112 aprobadas, 5 omitidas**, en unos 13 s. |
+| `uv run pytest -q` | **114 aprobadas, 5 omitidas**, en unos 21 s (tras D-016). |
 | Nominatim real | Tras corregir el extractor: 4 de 5 ubicaciones con coordenadas (1 confirmada, 3 estimadas) y 1 ambigua (Vista Alegre). |
 | Claude real | Llega a la API con `anthropic` 0.125. Con `MODEL_WORKSPACE_ID` responde 404: el workspace no existe para esa clave. |
 | Langfuse real | `auth_check` correcto; traza real recuperada con la API v2 y auditada. |

@@ -25,7 +25,25 @@ async def test_sin_credenciales_todo_not_configured(settings):
     for nombre in ("modelo_ia", "geocodificacion", "rutas", "transcripcion", "mapas"):
         assert estados[nombre] == "NOT_CONFIGURED", nombre
     assert estados["mensajeria"] == "CONFIGURED"  # simulada
+    assert estados.pop("base_de_datos") == "CONNECTED"  # SQLite local en memoria: no usa red
     assert "CONNECTED" not in estados.values()
+
+
+async def test_estado_base_de_datos_crea_y_conecta_sqlite(tmp_path):
+    archivo = tmp_path / "sub" / "water.db"
+    s = Settings(_env_file=None, database_url=f"sqlite:///{archivo}")
+    sin = {i["nombre"]: i for i in await estado(s, comprobar=False)}["base_de_datos"]
+    assert sin["estado"] == "CONFIGURED" and not archivo.exists()  # sin --comprobar no toca la base
+    con = {i["nombre"]: i for i in await estado(s, comprobar=True)}["base_de_datos"]
+    assert con["estado"] == "CONNECTED" and archivo.exists()
+
+
+async def test_estado_base_de_datos_error_sin_detalles(tmp_path):
+    bloqueo = tmp_path / "no_es_carpeta"
+    bloqueo.write_text("x")
+    s = Settings(_env_file=None, database_url=f"sqlite:///{bloqueo / 'water.db'}")
+    info = {i["nombre"]: i for i in await estado(s, comprobar=True)}["base_de_datos"]
+    assert info["estado"] == "ERROR" and str(tmp_path) not in info["detalle"]
 
 
 def test_llm_intercambiable_sin_tocar_logica():

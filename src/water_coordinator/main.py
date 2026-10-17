@@ -13,6 +13,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from sqlalchemy import text
+
 from water_coordinator import __version__
 from water_coordinator.config import Settings, get_settings, usar_certificados_del_sistema
 from water_coordinator.orchestration.pipeline import procesar_configurado
@@ -22,7 +24,7 @@ from water_coordinator.services.aprobacion import ErrorAprobacion, registrar_dec
 from water_coordinator.services.monitoreo import configurar_logs
 from water_coordinator.services.observabilidad import crear_observabilidad, faltantes_langfuse
 from water_coordinator.tools import geocoding, llm, messaging, routing, storage, transcription
-from water_coordinator.tools.estado import EstadoIntegracion, informe
+from water_coordinator.tools.estado import EstadoIntegracion, InformeIntegracion, informe
 
 DATOS_DEMO = Path("data/simulados/reportes.json")
 SUPERVISOR_SIMULADO = "SIMULACION-PRUEBA"  # DEC-19: solo pruebas; no sustituye a un supervisor real
@@ -69,10 +71,23 @@ async def demo(s: Settings, ruta: Path, aprobar: bool, reiniciar: bool = False) 
     }
 
 
+def estado_base_de_datos(s: Settings, comprobar: bool) -> InformeIntegracion:
+    """Con `comprobar`, abre la base (en SQLite crea el archivo y las tablas si no existen) y ejecuta SELECT 1."""
+    bd = "postgresql" if s.database_url.startswith("postgres") else "sqlite"
+    destino = s.database_url.split("@")[-1]  # sin usuario ni clave
+    if not comprobar:
+        return informe("base_de_datos", bd, EstadoIntegracion.CONFIGURED, f"{destino} | sin comprobar conexión.")
+    try:
+        with Repositorio(s.database_url).engine.connect() as c:
+            c.execute(text("SELECT 1"))
+        return informe("base_de_datos", bd, EstadoIntegracion.CONNECTED, f"{destino} | SELECT 1 correcto; tablas listas.")
+    except Exception as e:  # noqa: BLE001 — se informa el tipo, nunca credenciales
+        return informe("base_de_datos", bd, EstadoIntegracion.ERROR, type(e).__name__)
+
+
 async def estado(s: Settings, comprobar: bool) -> list[dict]:
     informes = [await m.estado(s, comprobar) for m in (llm, geocoding, routing, messaging, transcription, storage)]
-    bd = "postgresql" if s.database_url.startswith("postgres") else "sqlite"
-    informes.append(informe("base_de_datos", bd, EstadoIntegracion.CONFIGURED, s.database_url.split("@")[-1]))
+    informes.append(estado_base_de_datos(s, comprobar))
     mapa = EstadoIntegracion.CONFIGURED if s.map_tile_url else EstadoIntegracion.NOT_CONFIGURED
     informes.append(informe("mapas", "leaflet+osm", mapa, "MAP_TILE_URL para el frontend (frontend aún no integrado)."))
     if not s.langfuse_tracing_enabled:
