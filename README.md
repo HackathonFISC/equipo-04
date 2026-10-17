@@ -88,8 +88,7 @@ Si está activado, cada ejecución se envía a Langfuse como una traza con una o
 Muestra de un trace de flujo en langfuse: https://us.cloud.langfuse.com/project/cmvbbi8a300a3ad0jtsd3jl7b/traces/6aafea4690ff69a22ff1bf5338f434be?observation=f60deffb61060677
 
 **Metodologia del Proyecto**
-[Metodologia Hackathon Fisc las Power Rangers.docx](https://github.com/user-attachments/files/33599178/Metodologia.Hackathon.Fisc.las.Power.Rangers.docx)
-
+[Metodologia Proyecto Hackathon FISC equipo04.docx](https://github.com/user-attachments/files/33599550/Metodologia.Proyecto.Hackathon.FISC.equipo04.docx)
 
 ## Tecnologías y fuentes de datos
 Tecnologías
