@@ -4,7 +4,7 @@ Ejecución: `uv run pytest -q`. No requiere credenciales ni Internet.
 
 ## Última ejecución: 2026-10-17
 
-**111 aprobadas, 5 omitidas**, en unos 11 s. Además de las 106 anteriores, hay pruebas nuevas del extractor de ubicación, el catálogo de comunidades, `/api/communities`, la `generation` de Langfuse con modelo y tokens, y la máscara.
+**112 aprobadas, 5 omitidas**, en unos 13 s (incluye el proveedor `claude_code` con un subproceso simulado). Además de las 106 anteriores, hay pruebas nuevas del extractor de ubicación, el catálogo de comunidades, `/api/communities`, la `generation` de Langfuse con modelo y tokens, y la máscara.
 
 | Archivo | Cubre | Pruebas |
 | --- | --- | --- |

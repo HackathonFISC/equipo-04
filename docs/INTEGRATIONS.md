@@ -32,6 +32,8 @@ Con `--comprobar` hace una llamada real a cada servicio configurado. Es la únic
 | API HTTP | FastAPI + Uvicorn (local) | Implementada | Solo `127.0.0.1`; CORS solo para `CORS_ORIGINS`. Sin autenticación: las decisiones por HTTP son simuladas. |
 | Monitoreo externo | Sentry (opcional) | `DISABLED` | No implementado; los logs JSON locales con redacción de secretos están siempre activos. |
 
+**Claude vía Claude Code (sin API key):** verificado el 2026-10-17. Se contrastaron 6 reportes, todos coincidentes con las reglas, y las llamadas aparecen en Langfuse como `generation` (`claude-sonnet-5-5`, con sus tokens) anidadas bajo `clasificar-reportes`.
+
 **Probado con servicios reales:** Langfuse (traza `procesar-reportes` con 6 observaciones, auditada) y Nominatim (2026-10-17). Claude llega a la API, pero responde 404 porque el workspace configurado no existe para esa clave. `demo --reiniciar` con el geocodificador activo devolvió coordenadas estimadas para 2 de 5 ubicaciones y 1 ambigua. Ningún otro servicio está probado con credenciales.
 **Probado sin red:** todos los adaptadores, con transportes HTTP simulados (`tests/test_integraciones.py`).
 

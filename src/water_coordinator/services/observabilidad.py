@@ -61,6 +61,7 @@ class Etapa:
 class Observabilidad:
     def __init__(self, cliente: Any | None = None):
         self.cliente = cliente
+        self._etapa_actual: Etapa | None = None  # para anidar generations bajo el agente que las pidió
 
     @property
     def activa(self) -> bool:
@@ -95,19 +96,31 @@ class Observabilidad:
                     except Exception as e:  # noqa: BLE001
                         log.warning("Langfuse: cierre de atributos fallido (%s)", type(e).__name__)
 
-    def etapa(self, nombre: str, entrada: dict | None = None):
-        return self._observacion(nombre, "agent", entrada)
+    @contextmanager
+    def etapa(self, nombre: str, entrada: dict | None = None) -> Iterator[Etapa]:
+        with self._observacion(nombre, "agent", entrada) as etapa:
+            anterior, self._etapa_actual = self._etapa_actual, etapa
+            try:
+                yield etapa
+            finally:
+                self._etapa_actual = anterior
 
     def generacion(self, nombre: str, modelo: str, entrada: Any):
-        """Llamada a un modelo de IA: tipo generation, con el nombre del modelo para que Langfuse calcule el costo."""
-        return self._observacion(nombre, "generation", entrada, model=modelo)
+        """Llamada a un modelo de IA: tipo generation, con el nombre del modelo para que Langfuse calcule el costo.
+
+        Se anida explícitamente bajo la etapa en curso: el runtime de AutoGen ejecuta los agentes en otra tarea
+        y el contexto de OpenTelemetry no llega hasta ella.
+        """
+        padre = self._etapa_actual.span if self._etapa_actual else None
+        return self._observacion(nombre, "generation", entrada, padre=padre, model=modelo)
 
     @contextmanager
-    def _observacion(self, nombre: str, tipo: str, entrada: Any, **extra: Any) -> Iterator[Etapa]:
+    def _observacion(self, nombre: str, tipo: str, entrada: Any, padre: Any = None, **extra: Any) -> Iterator[Etapa]:
         cm = span = None
         if self.cliente is not None:
+            origen = padre if hasattr(padre, "start_as_current_observation") else self.cliente
             try:
-                cm = self.cliente.start_as_current_observation(name=nombre, as_type=tipo, input=entrada, **extra)
+                cm = origen.start_as_current_observation(name=nombre, as_type=tipo, input=entrada, **extra)
                 span = cm.__enter__()
             except Exception as e:  # noqa: BLE001
                 log.warning("Langfuse: no se pudo abrir '%s' (%s)", nombre, type(e).__name__)

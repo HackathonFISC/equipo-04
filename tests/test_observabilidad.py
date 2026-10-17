@@ -18,6 +18,15 @@ class SpanFalso:
     def __init__(self, registro, nombre):
         self.registro, self.nombre = registro, nombre
 
+    def start_as_current_observation(self, *, name, as_type="span", input=None, **extra):
+        self.registro.append(("start", name, {"as_type": as_type, "input": input, "padre": self.nombre, **extra}))
+
+        @contextmanager
+        def cm():
+            yield SpanFalso(self.registro, name)
+
+        return cm()
+
     def update(self, **campos):
         self.registro.append(("update", self.nombre, campos))
 
@@ -133,6 +142,7 @@ async def test_llamada_al_modelo_es_generation_con_modelo_y_tokens(repo):
                    obs=Observabilidad(cliente), modelo="claude-sonnet-5-5")
     gen = next(d for t, n, d in cliente.registro if t == "start" and n == "contrastar-clasificacion")
     assert gen["as_type"] == "generation" and gen["model"] == "claude-sonnet-5-5"
+    assert gen["padre"] == "clasificar-reportes"  # anidada bajo el agente que la pidió
     salida = next(d for t, n, d in cliente.registro if t == "update" and n == "contrastar-clasificacion")
     assert salida["usage_details"] == {"input": 120, "output": 9}
     assert "Juana" not in _json.dumps(cliente.registro, default=str, ensure_ascii=False)

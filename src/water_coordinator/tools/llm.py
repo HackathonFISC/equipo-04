@@ -6,6 +6,7 @@ La lógica de negocio solo recibe un `ChatCompletionClient | None`; cambiar de p
 from autogen_core.models import ChatCompletionClient, ModelInfo, UserMessage
 
 from water_coordinator.config import Settings
+from water_coordinator.tools.claude_code import ClaudeCodeClient, ruta_claude
 from water_coordinator.tools.estado import EstadoIntegracion as E
 from water_coordinator.tools.estado import InformeIntegracion, informe
 
@@ -19,6 +20,8 @@ def faltantes(s: Settings) -> list[str]:
         falta.append("MODEL_API_KEY")
     if s.model_provider == "openai_compatible" and not s.model_base_url:
         falta.append("MODEL_BASE_URL")
+    if s.model_provider == "claude_code" and not ruta_claude(s.claude_code_path):
+        falta.append("ejecutable de Claude Code (CLAUDE_CODE_PATH)")
     return falta
 
 
@@ -26,6 +29,8 @@ def crear_cliente(s: Settings) -> ChatCompletionClient | None:
     """None si no hay proveedor configurado: el sistema funciona con reglas deterministas."""
     if s.model_provider == "none" or faltantes(s):
         return None
+    if s.model_provider == "claude_code":  # sin API key: sesión de la app de escritorio
+        return ClaudeCodeClient(ruta_claude(s.claude_code_path), s.model_name)
     clave = s.model_api_key.get_secret_value() if s.model_api_key else None
     if s.model_provider == "anthropic":
         from autogen_ext.models.anthropic import AnthropicChatCompletionClient

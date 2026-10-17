@@ -123,3 +123,23 @@ async def test_comunidad_del_catalogo_y_contradiccion():
     assert (u.comunidad, u.zona_comunidad) == ("Barrio Colón", "La Chorrera")
     u = await ubicar(registro("#sinagua en Burunga, La Chorrera"), None)  # Burunga es de Arraiján
     assert u.estado_certeza == Certeza.AMBIGUA and len(u.alternativas) == 2
+
+
+async def test_claude_code_sin_api_key():
+    from autogen_core.models import SystemMessage, UserMessage
+
+    from water_coordinator.tools.claude_code import ClaudeCodeClient
+
+    class Falso(ClaudeCodeClient):
+        async def _ejecutar(self, args, entrada):
+            self.args, self.entrada = args, entrada
+            return {"is_error": False, "result": '{"tipo": "tuberia_rota"}',
+                    "usage": {"input_tokens": 2, "cache_creation_input_tokens": 100, "output_tokens": 9}}
+
+    c = Falso("claude.exe", "claude-sonnet-5-5")
+    r = await c.create([SystemMessage(content="clasifica"), UserMessage(content="tubo roto", source="u")], json_output=True)
+    assert r.content == '{"tipo": "tuberia_rota"}' and (r.usage.prompt_tokens, r.usage.completion_tokens) == (102, 9)
+    assert c.entrada == "tubo roto" and c.args[c.args.index("--system-prompt") + 1] == "clasifica"
+    assert c.args[c.args.index("--tools") + 1] == ""  # sin herramientas: solo responde
+    s = Settings(_env_file=None, model_provider="claude_code", model_name="claude-sonnet-5-5", claude_code_path="no/existe.exe")
+    assert llm.crear_cliente(s) is None and llm.faltantes(s)

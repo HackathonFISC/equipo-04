@@ -24,6 +24,7 @@ Nota: `python` no está en el PATH (es un alias de Microsoft Store) y `py` usa P
 | FastAPI 0.143 + Uvicorn 0.54 | API HTTP local del panel | En uso (D-010) |
 | anthropic 0.125 (fijado `<1`) | SDK de Claude | El 1.x es incompatible con `autogen-ext` 0.7.5 |
 | Skill `langfuse` (Claude Code) | Guía de instrumentación | Instalada en `~/.claude/skills/langfuse` |
+| Claude Code (`claude.exe` 2.1.299 de la app de escritorio) | Modelo de IA sin API key | En uso con `MODEL_PROVIDER=claude_code` (P-020) |
 | truststore | Verificación TLS con el almacén de Windows | En uso (P-016) |
 | Leaflet 1.9.4 (CDN unpkg) | Mapa del panel | En uso en `gestion.html` |
 | Langfuse 5.0.2 (OpenTelemetry) | Observabilidad del pipeline | Implementada; desactivada por defecto (D-015) |

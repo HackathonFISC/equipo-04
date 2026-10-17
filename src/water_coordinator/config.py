@@ -17,13 +17,15 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
 
-    # Modelos de IA (AutoGen). provider: none | openai | openai_compatible | anthropic
+    # Modelos de IA (AutoGen). provider: none | openai | openai_compatible | anthropic | claude_code (sin API key)
     model_provider: str = "none"
     model_name: str = ""
     model_api_key: SecretStr | None = None
     model_base_url: str = ""
     # Solo Anthropic: ID del workspace si la clave no está asociada a uno (cabecera anthropic-workspace-id).
     model_workspace_id: str = ""
+    # Solo claude_code: ruta a claude.exe; vacío = PATH o la versión incluida en la app de escritorio.
+    claude_code_path: str = ""
 
     # Geocodificación (Nominatim). provider: none | nominatim
     geocoder_provider: str = "none"

@@ -57,6 +57,7 @@ uv run water-coordinator estado --comprobar
 
 | Opción | Variables | Cuenta y costo |
 | --- | --- | --- |
+| **Claude Code (sin API key)** | `MODEL_PROVIDER=claude_code`, `MODEL_NAME=claude-sonnet-5-5` y, opcionalmente, `CLAUDE_CODE_PATH` | Usa la sesión de Claude de la app de escritorio (el `claude.exe` que trae incluido). No hacen falta créditos de la API: consume la cuota de tu plan. Cada llamada lleva unos 38.000 tokens de prompt base de Claude Code, cacheados durante 1 h. Solo para desarrollo local. |
 | **Ollama local** (gratis) | `MODEL_PROVIDER=openai_compatible`, `MODEL_BASE_URL=http://localhost:11434/v1`, `MODEL_NAME=<modelo descargado>` | Instalar desde https://ollama.com. Sin costo por uso; necesita RAM o GPU. |
 | **OpenAI** | `MODEL_PROVIDER=openai`, `MODEL_NAME`, `MODEL_API_KEY` | Clave en https://platform.openai.com/api-keys. Pago por token: https://openai.com/api/pricing |
 | **Anthropic (Claude)** | `MODEL_PROVIDER=anthropic`, `MODEL_NAME` (p. ej. `claude-sonnet-5-5`), `MODEL_API_KEY` y, si la clave no está asociada a un workspace, `MODEL_WORKSPACE_ID` (en la consola, *Settings → Workspaces*) | Clave en https://console.anthropic.com. Pago por token: https://www.anthropic.com/pricing |

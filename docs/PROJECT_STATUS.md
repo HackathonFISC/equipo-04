@@ -69,6 +69,13 @@
 - **Langfuse:** se instaló la skill oficial `langfuse` (github.com/langfuse/skills, commit `127253d`) en `~/.claude/skills/langfuse` y se ajustó la instrumentación a sus buenas prácticas (P-019). **Traza real verificada y auditada** con la skill: la ejecución `EJE-77d87e397f4e` (traza `0629628bfcf2d4ef62f50bf1f16ef507`) tiene la raíz `procesar-reportes` y 5 agentes hijas, entorno, versión de reglas, etiquetas `prototipo`/`cli-demo` y servicio `water-coordinator`, sin textos ni contactos. Tras la primera auditoría se mejoraron la entrada y la salida de la raíz y el nombre del servicio.
 - **Panel:** las peticiones usan `cache: 'no-store'`. Se corrigió un error de JavaScript (variable usada antes de declararse) que vaciaba la pestaña Comunidades.
 
+### 2026-10-17: Claude sin API key
+
+- **Nuevo proveedor `claude_code`:** usa el `claude.exe` de la app de escritorio con la sesión de la usuaria, sin API key ni créditos (P-020). El resto del código no cambia.
+- **Verificado de punta a punta:** el Agente 1 contrastó 6 reportes y todos coincidieron con las reglas. Las llamadas aparecen en Langfuse como `generation`, con modelo y tokens.
+- **Corrección tras la auditoría:** las generations quedaban colgando de la raíz porque el runtime de AutoGen ejecuta los agentes en otra tarea. Ahora se anidan bajo `clasificar-reportes`, comprobado en la traza `6aafea4690ff69a22ff1bf5338f434be`.
+- **Pendiente de la usuaria:** poner `MODEL_PROVIDER=claude_code` y `MODEL_NAME=claude-sonnet-5-5` en `.env`. Las verificaciones se hicieron con variables de entorno temporales, sin editar su `.env`.
+
 ## Decisiones
 
 - **Confirmadas:** D-001 a D-015 y DEC-C01 a DEC-C16 en [DECISIONS.md](DECISIONS.md). D-009 (no tocar el frontend) quedó obsoleta.
@@ -92,7 +99,7 @@
 | Comprobación | Resultado |
 | --- | --- |
 | `uv sync` | OK, con `system-certs` por la intercepción TLS. |
-| `uv run pytest -q` | **111 aprobadas, 5 omitidas**, en unos 11 s. |
+| `uv run pytest -q` | **112 aprobadas, 5 omitidas**, en unos 13 s. |
 | Nominatim real | Tras corregir el extractor: 4 de 5 ubicaciones con coordenadas (1 confirmada, 3 estimadas) y 1 ambigua (Vista Alegre). |
 | Claude real | Llega a la API con `anthropic` 0.125. Con `MODEL_WORKSPACE_ID` responde 404: el workspace no existe para esa clave. |
 | Langfuse real | `auth_check` correcto; traza real recuperada con la API v2 y auditada. |
@@ -121,7 +128,7 @@
 
 ## Próximos pasos
 
-1. Corregir `MODEL_WORKSPACE_ID` (o usar una clave asociada a un workspace) y verificar la `generation` de Claude en Langfuse (modelo y tokens).
+1. Poner `MODEL_PROVIDER=claude_code` en `.env` para usar Claude sin API key.
 3. Diseñar autenticación del supervisor antes de permitir aprobaciones reales por HTTP.
 4. Confirmar la lectura de C-02 (19:00–20:00).
 5. Incorporar DEC-C01 a DEC-C16 al documento de criterios (rev.5), si el equipo lo aprueba. DEC-C15 contradice DEC-01 del documento.
