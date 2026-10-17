@@ -34,7 +34,9 @@ flowchart LR
 | Persistencia | `persistence/repository.py` | SQLAlchemy Core. Tabla `documentos` con el estado actual en JSON; tabla `eventos` con la traza, solo de adición. Los reportes originales son inmutables. |
 | Configuración | `config.py`, `.env` | pydantic-settings. Los secretos usan `SecretStr`. |
 | Entrada | `main.py` | CLI: `demo`, `aprobar`, `estado`, `traza`. |
-| API | `api/` | Vacía: framework de API no aprobado. |
+| API | `api/app.py`, `api/rutas.py` | FastAPI local (D-010): CORS restringido y errores de BD como 503 sin detalles. Las rutas solo traducen HTTP a los servicios. |
+| Consultas del panel | `services/consultas.py`, `services/faq.py` | Vistas de lectura (incidentes, mensajes, eventos) que combinan documentos persistidos sin ejecutar el pipeline; FAQ fijo. |
+| Observabilidad | `services/observabilidad.py` | Langfuse opcional: traza por ejecución y observación por agente; tolerante a fallos. |
 
 ## Dónde interviene la IA y dónde no
 
@@ -64,7 +66,7 @@ Todo lleva `version_reglas = criterios-1.0-rev.4+dec-c16-2026-10-17`. Para consu
 | `graphify-out/GRAPH_REPORT.md` | Informe: nodos centrales, conexiones inesperadas y comunidades. |
 | `graphify-out/graph.json` | Datos del grafo. |
 
-**Resultados:** 347 nodos, 699 aristas, 19 comunidades y ningún ciclo de importación.
+**Resultados (regenerado tras la API, 2026-10-17):** 428 nodos, 923 aristas, 21 comunidades. El aviso de salud de abajo corresponde a la primera generación.
 
 **Nodos más conectados:**
 - `procesar()`: graphify fusiona en un solo nodo el orquestador y los `procesar` de cada agente, porque comparten nombre.
@@ -90,8 +92,26 @@ Todo lleva `version_reglas = criterios-1.0-rev.4+dec-c16-2026-10-17`. Para consu
 
 **Actualización:** tras cambiar el código, ejecutar `/graphify src/water_coordinator --update` (re-extrae solo lo modificado). Las cachés y rutas locales de `graphify-out/` están en `.gitignore`.
 
+## API y panel del supervisor
+
+```mermaid
+flowchart LR
+    FE[frontend/ admin.html · gestion.html<br/>panel del supervisor] -->|fetch + CORS local| API[FastAPI 127.0.0.1:8000]
+    API -->|GET| C[services/consultas.py]
+    C --> DB[(SQLite)]
+    API -->|POST /api/incidents| PL[orchestration/pipeline.py]
+    PL --> DB
+    PL -.->|opcional| LF[(Langfuse)]
+    API -->|POST /api/plans/id/decision<br/>simulada=true| AP[services/aprobacion.py]
+    AP --> DB
+```
+
+- **Lecturas:** nunca ejecutan el pipeline. Excluyen contactos y textos originales.
+- **Decisiones por HTTP:** siempre simuladas (D-011). La aprobación real sigue siendo solo por CLI.
+- **`id_ejecucion`:** cada ejecución del pipeline tiene uno. Enlaza la traza local (evento `reporte_recibido`) con la sesión de Langfuse.
+
 ## Pendiente de diseño
 
 - Agente 5 dentro del flujo, cuando estén la ubicación de la organización, los puntos de carga y la autonomía.
-- Backend HTTP (webhook de WhatsApp, interfaz del supervisor): falta aprobar el framework.
-- Integración de Leaflet en `frontend/`.
+- Webhook de WhatsApp sobre FastAPI y autenticación del supervisor.
+- Integración de Leaflet en `frontend/` (el mapa sigue como placeholder).

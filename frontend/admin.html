@@ -136,8 +136,16 @@
         <h2 id="recentNotificationsTitle">Notificaciones recientes</h2>
       </div>
       <div class="timeline" id="recentNotifications" role="list" aria-label="Notificaciones recientes de AquaAlerta">
-        <!-- Renderizar aquí las notificaciones recibidas del backend. -->
+        <!-- Mensajes propuestos por el Agente 6 (GET /api/messages). Son simulados: no se envían. -->
       </div>
+    </section>
+
+    <!-- Preguntas frecuentes del panel (GET /api/faq). -->
+    <section class="module-section" aria-labelledby="faqTitle">
+      <div class="module-header">
+        <h2 id="faqTitle">Preguntas frecuentes</h2>
+      </div>
+      <div class="timeline" id="faqList" role="list" aria-label="Preguntas frecuentes del panel"></div>
     </section>
 
     <!-- Conectar esta tabla al servicio de entregas. -->
@@ -202,5 +210,77 @@
 
   <!-- Lógica compartida para efectos visuales y avisos emergentes. -->
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    /* Conexión con la API local del supervisor. Los datos que no tienen respaldo en el backend quedan en "-". */
+    const AGENTES = { agente_1: 'A1 · Ingesta', agente_2: 'A2 · Geolocalización', agente_3: 'A3 · Priorización',
+                      agente_4: 'A4 · Planificación', agente_6: 'A6 · Comunicación', supervisor: 'Supervisor', sistema: 'Sistema' };
+    const TIPOS_EVENTO = { reporte_recibido: 'Reporte recibido', registro: 'Registro estructurado', ubicacion: 'Ubicación normalizada',
+                           prioridad: 'Prioridad calculada', plan_propuesto: 'Plan propuesto', mensaje: 'Mensaje propuesto (simulado)',
+                           decision: 'Decisión del supervisor' };
+
+    function lista(id, html) { document.getElementById(id).innerHTML = html; }
+    function itemTexto(titulo, texto) {
+      return `<div class="timeline-item" role="listitem"><h4>${titulo}</h4><p>${texto}</p></div>`;
+    }
+
+    async function cargarMensajes() {
+      lista('recentNotifications', itemTexto('Cargando…', ''));
+      try {
+        const { items } = await apiFetch('/api/messages');
+        if (items.length === 0) {
+          lista('recentNotifications', itemTexto('Sin mensajes', 'El Agente 6 todavía no ha propuesto mensajes.'));
+          return;
+        }
+        lista('recentNotifications', items.map(m => itemTexto(
+          `${m.tipo === 'cobertura_parcial' ? 'Cobertura parcial' : 'Estado'} · ${esc(m.id_afectacion)} &nbsp;
+           <span class="badge-status badge-slate">Simulado · no enviado</span>
+           ${m.estado_plan_actual ? estadoBadge(m.estado_plan_actual) : ''}`,
+          esc(m.texto))).join(''));
+      } catch (e) {
+        lista('recentNotifications', itemTexto('No se pudieron cargar los mensajes', esc(e.message)));
+      }
+    }
+
+    async function cargarFaq() {
+      try {
+        const { items } = await apiFetch('/api/faq');
+        lista('faqList', items.map(f => itemTexto(esc(f.pregunta), esc(f.respuesta))).join(''));
+      } catch (e) {
+        lista('faqList', itemTexto('No se pudieron cargar las preguntas frecuentes', esc(e.message)));
+      }
+    }
+
+    async function cargarEntregas() {
+      const tbody = document.getElementById('recentDeliveries');
+      tbody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8;">Cargando…</td></tr>';
+      try {
+        const [{ items: eventos }, { items: incidentes }] = await Promise.all([
+          apiFetch('/api/agent-events?limite=15'), apiFetch('/api/incidents')]);
+        const estadoPlan = Object.fromEntries(incidentes.filter(i => i.plan).map(i => [i.plan.id_plan, i.plan.estado]));
+        document.getElementById('adminKpiReports').textContent = incidentes.length;
+        document.getElementById('adminKpiDeliveries').textContent = incidentes.filter(i => i.plan && i.plan.estado === 'ejecutado').length;
+        if (eventos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8;">Sin actividad registrada de los agentes.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = eventos.map(e => `
+          <tr>
+            <td>${esc(AGENTES[e.agente] || e.agente)}</td>
+            <td style="font-size:0.85rem; color:#94a3b8;">${fechaCorta(e.fecha)}</td>
+            <td>${esc(TIPOS_EVENTO[e.tipo] || e.tipo)}</td>
+            <td>${estadoPlan[e.ref_id] ? estadoBadge(estadoPlan[e.ref_id]) : '<span style="font-size:0.8rem; color:#64748b;">—</span>'}</td>
+            <td>${estadoPlan[e.ref_id] ? '<a href="gestion.html" style="color:#0FC8BB; font-weight:600;">Ver en Gestión</a>' : '—'}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color:#94a3b8;">No se pudo cargar la actividad: ${esc(e.message)}</td></tr>`;
+        showToast('error', 'Sin conexión con la API', e.message);
+      }
+    }
+
+    cargarMensajes();
+    cargarFaq();
+    cargarEntregas();
+  </script>
 </body>
 </html>

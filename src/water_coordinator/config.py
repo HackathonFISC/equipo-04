@@ -67,6 +67,15 @@ class Settings(BaseSettings):
     # Monitoreo externo opcional
     sentry_dsn: SecretStr | None = None
 
+    # Observabilidad del pipeline en Langfuse (desactivada por defecto)
+    langfuse_tracing_enabled: bool = False
+    langfuse_public_key: SecretStr | None = None
+    langfuse_secret_key: SecretStr | None = None
+    langfuse_base_url: str = ""
+
+    # API HTTP local: orígenes del frontend permitidos por CORS (separados por comas)
+    cors_origins: str = "http://127.0.0.1:5500,http://localhost:5500"
+
     # Parámetros operativos
     horarios_file: Path | None = None  # JSON que reemplaza los horarios por defecto
     a_personas_referencia: int = 1000

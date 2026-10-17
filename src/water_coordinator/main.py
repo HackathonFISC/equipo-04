@@ -15,12 +15,12 @@ from pathlib import Path
 
 from water_coordinator import __version__
 from water_coordinator.config import Settings, get_settings
-from water_coordinator.orchestration.pipeline import procesar
+from water_coordinator.orchestration.pipeline import procesar_configurado
 from water_coordinator.persistence.repository import Repositorio
 from water_coordinator.schemas.models import ReporteEntrada
 from water_coordinator.services.aprobacion import ErrorAprobacion, registrar_decision
 from water_coordinator.services.monitoreo import configurar_logs
-from water_coordinator.services.parametros import cargar_horarios
+from water_coordinator.services.observabilidad import crear_observabilidad, faltantes_langfuse
 from water_coordinator.tools import geocoding, llm, messaging, routing, storage, transcription
 from water_coordinator.tools.estado import EstadoIntegracion, informe
 
@@ -33,10 +33,11 @@ async def demo(s: Settings, ruta: Path, aprobar: bool) -> dict:
     momento = datetime.fromisoformat(datos["momento_planificacion"])
     reportes = [ReporteEntrada(**r) for r in datos["reportes"]]
     repo = Repositorio(s.database_url)
-    res = await procesar(
-        reportes, repo, momento, cargar_horarios(s.horarios_file), llm=llm.crear_cliente(s), nombre_modelo=llm.nombre_modelo(s),
-        geo=geocoding.crear_geocodificador(s), mensajeria=messaging.MockMessagingProvider(), a_referencia=s.a_personas_referencia,
-    )
+    obs = crear_observabilidad(s)
+    try:
+        res = await procesar_configurado(s, reportes, repo, momento, obs)
+    finally:
+        obs.vaciar()  # comando de corta duración: enviar lo pendiente a Langfuse antes de salir
     decisiones = []
     if aprobar:
         for p in res.planes.planes:
@@ -61,6 +62,8 @@ async def demo(s: Settings, ruta: Path, aprobar: bool) -> dict:
         "mensajes_simulados": [{"para": m.destinatario, "tipo": m.tipo, "texto": m.texto} for m in res.mensajes.mensajes],
         "decisiones": decisiones,
         "base_de_datos": s.database_url,
+        "id_ejecucion": res.id_ejecucion,
+        "langfuse": "activo" if obs.activa else "desactivado",
     }
 
 
@@ -70,6 +73,13 @@ async def estado(s: Settings, comprobar: bool) -> list[dict]:
     informes.append(informe("base_de_datos", bd, EstadoIntegracion.CONFIGURED, s.database_url.split("@")[-1]))
     mapa = EstadoIntegracion.CONFIGURED if s.map_tile_url else EstadoIntegracion.NOT_CONFIGURED
     informes.append(informe("mapas", "leaflet+osm", mapa, "MAP_TILE_URL para el frontend (frontend aún no integrado)."))
+    if not s.langfuse_tracing_enabled:
+        informes.append(informe("observabilidad", "langfuse", EstadoIntegracion.DISABLED, "LANGFUSE_TRACING_ENABLED=false."))
+    elif f := faltantes_langfuse(s):
+        informes.append(informe("observabilidad", "langfuse", EstadoIntegracion.NOT_CONFIGURED, f"Faltan: {', '.join(f)}"))
+    else:
+        informes.append(informe("observabilidad", "langfuse", EstadoIntegracion.CONFIGURED,
+                                "Trazas activas; verificar en el proyecto de Langfuse tras ejecutar `demo`."))
     mon = EstadoIntegracion.CONFIGURED if s.sentry_dsn else EstadoIntegracion.DISABLED
     informes.append(informe("monitoreo_externo", "sentry", mon, "Opcional; logs JSON locales siempre activos."))
     return [i.model_dump(mode="json") for i in informes]

@@ -128,6 +128,25 @@ uv run water-coordinator estado --comprobar
 - **Eventos de AutoGen:** sus payloads, que incluyen contactos, no se registran en nivel INFO.
 - **Sentry u otros:** opcionales y sin implementar. `SENTRY_DSN` queda reservado.
 
+## 10. Observabilidad: Langfuse
+
+- **Enlaces:** https://langfuse.com/docs · Precios: https://langfuse.com/pricing · SDK de Python: https://langfuse.com/docs/sdk/python
+- **SDK:** `langfuse` 5.0.2 (basado en OpenTelemetry). La integración usa `Langfuse(...)`, `start_as_current_observation` y `propagate_attributes`.
+- **Cuenta:** Langfuse Cloud (tiene plan gratuito con límites) o una instancia propia. Crea un proyecto y genera un par de claves en *Settings → API Keys*.
+- **Variables:** `LANGFUSE_TRACING_ENABLED=true`, `LANGFUSE_PUBLIC_KEY` (`pk-lf-…`), `LANGFUSE_SECRET_KEY` (`sk-lf-…`) y `LANGFUSE_BASE_URL` (p. ej. `https://cloud.langfuse.com` o `https://us.cloud.langfuse.com`, según la región del proyecto).
+- **Qué se envía:**
+  - Una traza por ejecución del pipeline (`water-coordinator.pipeline`), con `session_id = id_ejecucion` y `version = versión de reglas`.
+  - Una observación de tipo *agent* por etapa (A1, A2, A3, A4, A6), con su duración, un resumen del resultado (conteos, estados, prioridades, coberturas) y su nivel `ERROR` si falla.
+- **Qué NO se envía:**
+  - Textos de reportes, contactos ni secretos.
+  - Los spans internos de AutoGen ni de los clientes de IA: el runtime usa `NoOpTracerProvider` y el exportador filtra con `is_langfuse_span`.
+  - Llamadas de modelo ni métricas de consumo: el sistema no las mide hoy y no se inventan.
+- **Tolerancia a fallos:** si Langfuse falla o no está configurado, se registra un aviso en el log y el pipeline y la API siguen funcionando.
+- **Envío de pendientes:**
+  - La CLI hace `flush` al terminar `demo`.
+  - La API hace `flush` después de cada `POST /api/incidents` y al apagarse.
+- **Costo:** según el plan de Langfuse. No se activa nada de pago automáticamente.
+
 ---
 
 ## Lista de pasos que debe hacer la usuaria
@@ -139,3 +158,4 @@ uv run water-coordinator estado --comprobar
 5. **Whisper:** ejecutar `uv sync --extra transcripcion-local` y poner `TRANSCRIPTION_PROVIDER=whisper_local`.
 6. **Google STT (opcional):** crear un proyecto con facturación, una cuenta de servicio y su JSON.
 7. **Mapas:** integrar Leaflet en `frontend/` cuando esa carpeta se suba.
+8. **Langfuse (opcional):** crear un proyecto, generar las claves, ponerlas en `.env` con `LANGFUSE_TRACING_ENABLED=true` y ejecutar `uv run water-coordinator demo`.

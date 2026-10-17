@@ -16,7 +16,7 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | D-006 | **AutoGen** (`autogen-core` 0.7.5) para coordinar a los agentes. | 2026-10-17 | Usuaria |
 | D-007 | Integraciones preparadas sin credenciales: Leaflet, OSM, Nominatim, OSRM, modelo de IA configurable, WhatsApp Cloud API (adaptador + simulación), Whisper local, Google STT opcional, SQLite→PostgreSQL, almacenamiento local y logs estructurados. | 2026-10-17 | Usuaria |
 | D-008 | El documento de criterios rev.4 queda en `docs/` como fuente de verdad. | 2026-10-17 | Usuaria |
-| D-009 | No se modifica la carpeta `frontend/`: tiene cambios que todavía no se subieron. | 2026-10-17 | Usuaria |
+| D-009 | ~~No se modifica la carpeta `frontend/`~~. **Obsoleta (2026-10-17):** el frontend ya se subió (PR #1) y se conectó a la API conservando su diseño (D-010). | 2026-10-17 | Usuaria |
 | DEC-C01 | Redondeo **al 0,5 más cercano** (mitades hacia arriba) para T, V y A. | 2026-10-17 | Usuaria |
 | DEC-C02 | El Agente 1 identifica la fecha del incidente en el texto al filtrar ("hace 2 días", "desde ayer", "desde el lunes", "15/10"…). Si no la encuentra, queda nula: nunca se usa la fecha de recepción. | 2026-10-17 | Usuaria |
 | DEC-C03 | Escala de confianza de la clasificación: `alta` / `media` / `baja` / `ninguna` (criterios en [KEYWORDS.md](KEYWORDS.md)). Definida por Claude a discreción, con autorización de la usuaria. | 2026-10-17 | Usuaria → Claude |
@@ -32,6 +32,12 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | DEC-C13 | Palabras clave `#idaan #sinagua #faltadeagua #tuberiarota`, con sus equivalentes en voz y las ampliaciones recomendadas ([KEYWORDS.md](KEYWORDS.md)). | 2026-10-17 | Usuaria |
 | DEC-C14 | Whisper local mediante **faster-whisper**, como extra opcional (`transcripcion-local`). | 2026-10-17 | Usuaria |
 | DEC-C15 | **Compensación temporal en la demanda** (resuelve C-01; **reemplaza a DEC-01 del documento en lo que respecta a la demanda**). `días_planificación = duración(tipo) + 0,5 × días_sin_agua`. Los días sin agua se cuentan desde el incidente hasta la recepción del reporte, no hasta la hora de planificación. El tiempo sin agua sigue subiendo la prioridad (T). Si no hay fecha del incidente, no se compensa y se avisa que la demanda puede estar subestimada. | 2026-10-17 | Usuaria |
+| D-010 | **FastAPI + Uvicorn** como API HTTP local del panel del supervisor (`api/`). El frontend (panel del supervisor, no ciudadano) consume la API sin cambiar su diseño. No hay formularios de reporte ni autenticación inventada. | 2026-10-17 | Usuaria |
+| D-011 | Las decisiones del supervisor por HTTP (`POST /api/plans/{id}/decision`) se registran **siempre como simuladas**. Las reales solo por CLI hasta que exista autenticación. | 2026-10-17 | Usuaria |
+| D-012 | `POST /api/incidents` registra y procesa reportes con el pipeline existente (sin formulario en el frontend). | 2026-10-17 | Usuaria |
+| D-013 | Los filtros y etiquetas del frontend usan los estados reales del backend (`Estado`); las reglas de negocio no cambian. | 2026-10-17 | Usuaria |
+| D-014 | FAQ del panel en `admin.html`, debajo de «Notificaciones recientes», con las clases existentes. | 2026-10-17 | Usuaria |
+| D-015 | **Langfuse** (SDK oficial 5.x) para observar las ejecuciones del pipeline: desactivado por defecto, una traza por ejecución y una observación por agente, sin datos sensibles. | 2026-10-17 | Usuaria |
 | DEC-C16 | **Capacidad por tipo** (resuelve C-03). Todas las Small cargan entre 3.000 y 5.500 gal; todas las Big, entre 9.000 y 13.000 gal. El máximo es la capacidad que se usa para la cobertura y el mínimo es la carga mínima. Cuando el tipo no se conoce (la disponibilidad por horario no lo indica), se usa el menor máximo, 5.500 gal, para no sobrestimar. | 2026-10-17 | Usuaria |
 
 ## Conflictos que necesitan confirmación
@@ -57,6 +63,8 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | P-009 | Referencia territorial: los 5 distritos de Panamá Oeste (Arraiján, Capira, Chame, La Chorrera, San Carlos). Coincidir con un distrito da certeza "aproximada". | Fuente territorial [PEND]. |
 | P-010 | La aprobación extraordinaria (<80 %) exige una justificación escrita. | DEC-07. |
 | P-011 | Los reportes `indeterminado` no pasan del Agente 1; el Agente 6 les pide más información. | §3.3. |
+| P-013 | Urgencia en el Tracking = nivel de la jerarquía del Agente 3 (1–5). El KPI «Urgencia crítica» queda sin calcular ("-") porque no hay definición aprobada. | Evita inventar una regla de urgencia. |
+| P-014 | El panel registra las decisiones con el supervisor `panel-web (sin autenticación)`. | No hay identidad verificada (DEC-19). |
 | P-012 | El modelo de IA solo contrasta la clasificación. Si discrepa, la confianza baja a `baja` y el registro va a revisión; nunca sobrescribe. | Separar la IA de las reglas. |
 
 ## Pendientes
@@ -71,3 +79,9 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 - Autenticación del supervisor, retención de datos y control de acceso.
 - Integración del frontend (Leaflet) cuando se suba la carpeta `frontend/`.
 - Fuente y potabilidad del agua antes de cualquier operación real (crítico).
+
+## Hallazgos abiertos (2026-10-17, tarea de API)
+
+- **Claude no funciona con la versión instalada:** `autogen-ext` 0.7.5 envía `temperature` y el SDK `anthropic` 1.15 lo rechaza (`TypeError`). El Agente 1 vuelve a las reglas y lo registra en el log. Para arreglarlo hay que fijar una versión compatible de `anthropic` o cambiar de cliente. Requiere decisión.
+- **Ubicación reportada:** la extracción del Agente 1 puede incluir la palabra siguiente tras un punto (p. ej. «Nuevo Chorrillo, Arraiján. Empezó»). Es un defecto del extractor, no una regla, y todavía no se ha corregido.
+- **Planificación entre lotes:** cada `POST /api/incidents` se planifica en su propio lote, así que el Agente 4 no conoce las cisternas asignadas en lotes anteriores. Puede haber doble asignación entre lotes. Está documentado y no está resuelto.

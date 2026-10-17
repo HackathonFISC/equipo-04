@@ -85,11 +85,13 @@
           <label>Estado</label>
           <select id="statusFilter">
             <option value="">Todos los estados</option>
-            <option value="Recibido">Recibido</option>
-            <option value="En revisión">En revisión</option>
-            <option value="Confirmado">Confirmado</option>
-            <option value="Rechazado">Rechazado</option>
-            <option value="Cerrado">Cerrado</option>
+            <option value="pendiente_de_aprobacion">Pendiente de aprobación</option>
+            <option value="pendiente_de_revision">Pendiente de revisión</option>
+            <option value="pendiente_de_informacion">Pendiente de información</option>
+            <option value="aprobado">Aprobado</option>
+            <option value="rechazado">Rechazado</option>
+            <option value="cambios_solicitados">Cambios solicitados</option>
+            <option value="ejecutado">Ejecutado</option>
           </select>
         </div>
       </div>
@@ -221,9 +223,12 @@
           <label>Urgencia</label>
           <select id="urgencyFilter">
             <option value="">Todas las urgencias</option>
-            <option value="critical">Crítica</option>
-            <option value="medium">Media</option>
-            <option value="normal">Normal</option>
+            <option value="1">Nivel 1 · Hospital</option>
+            <option value="2">Nivel 2 · Policlínica</option>
+            <option value="3">Nivel 3 · Centro de salud</option>
+            <option value="4">Nivel 4 · Escuela</option>
+            <option value="5">Nivel 5 · Otras (puntuación P)</option>
+            <option value="sin_nivel">Sin nivel determinado</option>
           </select>
         </div>
       </div>
@@ -402,16 +407,10 @@
 
   <!-- Conectar reportes, comunidades, mapa y estadísticas a los servicios del backend. -->
   <script src="js/main.js"></script>
+  <script src="js/api.js"></script>
   <script>
     /* ---------- Reportes ---------- */
-    const reportes = []; // TODO: cargar desde el servicio de reportes.
-    const estadoColors = {
-      Recibido: 'badge-cyan',
-      'En revisión': 'badge-purple',
-      Confirmado: 'badge-orange',
-      Rechazado: 'badge-slate',
-      Cerrado: 'badge-green',
-    };
+    const reportes = []; // Se carga desde GET /api/incidents (ver cargarIncidentes).
 
     function renderReportes() {
       const table = document.getElementById('reportesTable');
@@ -436,13 +435,13 @@
       data.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${r.codigo}</span></td>
-          <td>${r.comunidad}</td>
-          <td style="font-size:0.85rem; color:#94a3b8;">${r.distrito}</td>
-          <td>${r.tipo}</td>
-          <td><span class="badge-status ${estadoColors[r.estado]}">${r.estado}</span></td>
+          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${esc(r.codigo)}</span></td>
+          <td>${esc(r.comunidad)}</td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${esc(r.distrito)}</td>
+          <td>${esc(r.tipo)}</td>
+          <td>${estadoBadge(r.estado, r.decisionSimulada ? 'simulado' : '')}</td>
           <td style="font-size:0.85rem; color:#94a3b8;">${r.fecha}</td>
-          <td><!-- TODO: conectar acciones de cambio de estado con la API. --></td>
+          <td>${accionesPlan(r.plan)}</td>
         `;
         table.appendChild(tr);
       });
@@ -519,17 +518,9 @@
     // TODO: integrar un proveedor de mapas y cargar coordenadas reales del backend.
 
     /* ---------- Tracking ---------- */
-    const reports = []; // TODO: cargar desde el servicio de seguimiento.
-    const urgencyColors = { critical: 'badge-critical', medium: 'badge-orange', normal: 'badge-normal' };
-    const statusColors = {
-      Recibido: 'badge-cyan',
-      'En revisión': 'badge-purple',
-      Confirmado: 'badge-orange',
-      'Cisterna programado': 'badge-blue',
-      Atendido: 'badge-green',
-      Cerrado: 'badge-slate',
-      Rechazado: 'badge-slate',
-    };
+    const reports = []; // Se carga desde GET /api/incidents (ver cargarIncidentes).
+    // Urgencia = nivel de la jerarquía del Agente 3 (1 hospital … 5 otras afectaciones).
+    const urgencyColors = { '1': 'badge-critical', '2': 'badge-critical', '3': 'badge-orange', '4': 'badge-orange', '5': 'badge-normal', sin_nivel: 'badge-slate' };
 
     function renderTracking() {
       const table = document.getElementById('trackingTable');
@@ -545,9 +536,10 @@
       );
       if (data.length > 0) {
         document.getElementById('kpiTotal').textContent = data.length;
-        document.getElementById('kpiResueltos').textContent = data.filter(r => r.status === 'Atendido' || r.status === 'Cerrado').length;
-        document.getElementById('kpiCriticas').textContent = data.filter(r => r.urgency === 'critical').length;
-        document.getElementById('kpiPendientes').textContent = data.filter(r => r.status === 'Recibido' || r.status === 'En revisión').length;
+        // Resuelto = ejecutado o verificado por el responsable operativo (no por el sistema).
+        document.getElementById('kpiResueltos').textContent = data.filter(r => r.status === 'ejecutado' || r.status === 'verificado').length;
+        // "Urgencia crítica" no tiene una definición en las reglas aprobadas: el indicador queda sin calcular ("-").
+        document.getElementById('kpiPendientes').textContent = data.filter(r => r.status.startsWith('pendiente_')).length;
       }
       table.innerHTML = '';
       if (data.length === 0) {
@@ -560,13 +552,13 @@
       data.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${r.code}</span></td>
-          <td>${r.community}</td>
-          <td style="font-size:0.85rem; color:#94a3b8;">${r.district}</td>
-          <td><span class="badge-status ${urgencyColors[r.urgency]}">${r.urgencyLabel}</span></td>
-          <td><span class="badge-status ${statusColors[r.status] || 'badge-slate'}">${r.status}</span></td>
+          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${esc(r.code)}</span></td>
+          <td>${esc(r.community)}</td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${esc(r.district)}</td>
+          <td><span class="badge-status ${urgencyColors[r.urgency]}">${esc(r.urgencyLabel)}</span></td>
+          <td>${estadoBadge(r.status)}</td>
           <td style="font-size:0.85rem; color:#94a3b8;">${r.updated}</td>
-          <td><!-- TODO: conectar la acción de detalle al backend. --></td>
+          <td>${accionesPlan(r.plan)}</td>
         `;
         table.appendChild(tr);
       });
@@ -704,6 +696,78 @@
       `;
       statusChart.appendChild(row);
     });
+
+    /* ---------- Conexión con la API (GET /api/incidents) ---------- */
+    const NIVELES = { 1: 'Nivel 1 · Hospital', 2: 'Nivel 2 · Policlínica', 3: 'Nivel 3 · Centro de salud', 4: 'Nivel 4 · Escuela', 5: 'Nivel 5 · Otras' };
+
+    function mensajeVacio(id, texto) {
+      const p = document.querySelector(`#${id} p`);
+      if (p) p.textContent = texto;
+    }
+
+    function renderReportesIA(items) {
+      const tbody = document.getElementById('aiReportsTable');
+      if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#94a3b8;">No hay reportes clasificados en el backend.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map(i => `
+        <tr>
+          <td><span style="font-family:'Courier New',monospace; font-size:0.85rem; color:#0FC8BB;">${esc(i.id_reporte)}</span></td>
+          <td>${esc(i.ubicacion_reportada || i.zona || '—')}</td>
+          <td>${esc(TIPOS[i.tipo_afectacion] || i.tipo_afectacion)} <span style="font-size:0.75rem; color:#64748b;">(${esc(i.metodo_clasificacion.replace(/_/g, ' '))})</span></td>
+          <td>${esc(i.confianza_clasificacion)}</td>
+          <td>${estadoBadge(i.estado_registro)}</td>
+          <td style="font-size:0.85rem; color:#94a3b8;">${fechaCorta(i.recibido_en)}</td>
+        </tr>`).join('');
+    }
+
+    async function cargarIncidentes() {
+      mensajeVacio('emptyReportes', 'Cargando reportes…');
+      mensajeVacio('emptyTracking', 'Cargando reportes…');
+      try {
+        const { items } = await apiFetch('/api/incidents');
+        reportes.splice(0, reportes.length, ...items.map(i => ({
+          codigo: i.id_afectacion,
+          comunidad: i.ubicacion_reportada || '—',
+          distrito: i.zona || '—',
+          tipo: TIPOS[i.tipo_afectacion] || i.tipo_afectacion,
+          estado: i.estado_actual,
+          fecha: fechaCorta(i.recibido_en),
+          plan: i.plan,
+          decisionSimulada: Boolean(i.plan && i.plan.decision_simulada),
+        })));
+        reports.splice(0, reports.length, ...items.map(i => ({
+          code: i.id_afectacion,
+          community: i.ubicacion_reportada || '—',
+          district: i.zona || '—',
+          type: TIPOS[i.tipo_afectacion] || i.tipo_afectacion,
+          urgency: i.nivel_jerarquia ? String(i.nivel_jerarquia) : 'sin_nivel',
+          urgencyLabel: NIVELES[i.nivel_jerarquia] || 'Sin nivel',
+          status: i.estado_actual,
+          updated: fechaCorta(i.recibido_en),
+          plan: i.plan,
+        })));
+        renderReportesIA(items);
+        const vacio = 'No hay reportes registrados en el backend.';
+        mensajeVacio('emptyReportes', vacio);
+        mensajeVacio('emptyTracking', vacio);
+      } catch (e) {
+        mensajeVacio('emptyReportes', `No se pudieron cargar los reportes: ${e.message}`);
+        mensajeVacio('emptyTracking', `No se pudieron cargar los reportes: ${e.message}`);
+        showToast('error', 'No se pudieron cargar los reportes', e.message);
+      }
+      renderReportes();
+      renderTracking();
+    }
+
+    document.addEventListener('click', async (ev) => {
+      const boton = ev.target.closest('button[data-plan]');
+      if (!boton || boton.disabled) return;
+      if (await decidirPlan(boton.dataset.plan, boton.dataset.decision, boton)) cargarIncidentes();
+    });
+
+    cargarIncidentes();
   </script>
 </body>
 </html>

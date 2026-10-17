@@ -21,7 +21,9 @@ Nota: `python` no está en el PATH (es un alias de Microsoft Store) y `py` usa P
 | SQLAlchemy 2.1 + SQLite | Persistencia (migrable a PostgreSQL) | En uso |
 | httpx | Cliente HTTP de los adaptadores | En uso |
 | pytest + pytest-asyncio | Pruebas | En uso |
-| Leaflet + teselas OSM | Mapas en el frontend | Preparado (variables); frontend congelado |
+| FastAPI 0.143 + Uvicorn 0.54 | API HTTP local del panel | En uso (D-010) |
+| Langfuse 5.0.2 (OpenTelemetry) | Observabilidad del pipeline | Implementada; desactivada por defecto (D-015) |
+| Leaflet + teselas OSM | Mapas en el frontend | Preparado (variables); el mapa sigue como placeholder |
 | Nominatim | Geocodificación | Adaptador listo; `NOT_CONFIGURED` |
 | OSRM | Rutas | Adaptador listo; `NOT_CONFIGURED` |
 | OpenAI / compatible (Ollama) / Anthropic | Modelo de IA | Cliente intercambiable; `NOT_CONFIGURED` |
@@ -33,7 +35,6 @@ Nota: `python` no está en el PATH (es un alias de Microsoft Store) y `py` usa P
 
 | Herramienta | Categoría | Nota |
 | --- | --- | --- |
-| FastAPI u otro | API / webhook de WhatsApp | Necesario para el webhook y la interfaz del supervisor |
 | Streamlit u otro | Interfaz | Alternativa si no se usa el frontend actual |
 | OR-Tools | Optimización de rutas | Útil en la etapa 2 (Agente 5) |
 | Ruff | Lint y formato | Por evaluar |
