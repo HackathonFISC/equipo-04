@@ -144,11 +144,10 @@
       </div>
       <div class="community-overview">
         <div class="map-col">
-          <div class="map-placeholder">
+          <div class="map-placeholder" id="mapaComunidades">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 3 1 22 23 22 23 3"></polygon><polyline points="9 3 22 3 12 8"></polyline></svg>
-            <div>Conecta un proveedor de mapas para mostrar ubicaciones.</div>
+            <div id="mapaComunidadesMensaje">Cargando ubicaciones…</div>
           </div>
-          <!-- TODO: integrar el proveedor de mapas y las coordenadas reales de las comunidades. -->
         </div>
         <div class="list-col">
           <div id="communitiesList">
@@ -742,63 +741,66 @@
       renderComunidades();
     }
 
-    /* ---------- Mapa (Leaflet + teselas OpenStreetMap) ---------- */
-    // Solo se dibujan coordenadas reales del geocodificador; si no hay ninguna, se mantiene el aviso.
-    let mapa = null;
-    let capaMarcadores = null;
-    let limites = null;
+    /* ---------- Mapas (Leaflet + teselas OpenStreetMap) ---------- */
+    // Pestañas Mapa y Comunidades. Solo se dibujan coordenadas reales del geocodificador; si no hay, queda el aviso.
+    const MAPAS = {
+      'tab-mapa': { canvas: 'mapaCanvas', mensaje: 'mapaMensaje', mapa: null, capa: null, limites: null },
+      'tab-comunidades': { canvas: 'mapaComunidades', mensaje: 'mapaComunidadesMensaje', mapa: null, capa: null, limites: null },
+    };
 
-    function ajustarMapa() {
-      if (!mapa || !limites) return;
-      mapa.invalidateSize();
-      mapa.fitBounds(limites, { maxZoom: 14 });
+    function ajustarMapa(m) {
+      if (!m || !m.mapa || !m.limites) return;
+      m.mapa.invalidateSize();
+      m.mapa.fitBounds(m.limites, { maxZoom: 14 });
     }
 
-    function renderMapa(items) {
-      const conCoordenadas = items.filter(i => i.coordenadas);
-      const mensaje = document.getElementById('mapaMensaje');
+    function dibujarMapa(m, conCoordenadas) {
+      const mensaje = document.getElementById(m.mensaje);
       if (typeof L === 'undefined') {
-        mensaje.textContent = 'No se pudo cargar Leaflet (sin conexión a unpkg.com).';
+        if (mensaje) mensaje.textContent = 'No se pudo cargar Leaflet (sin conexión a unpkg.com).';
         return;
       }
       if (conCoordenadas.length === 0) {
-        mensaje.textContent = 'Ninguna afectación tiene coordenadas del geocodificador. Activa Nominatim y vuelve a cargar los datos.';
+        if (mensaje) mensaje.textContent = 'Ninguna afectación tiene coordenadas del geocodificador. Activa Nominatim y vuelve a cargar los datos.';
         return;
       }
-      const canvas = document.getElementById('mapaCanvas');
-      if (!mapa) {
-        canvas.innerHTML = '<div id="mapaLeaflet" style="position:absolute; inset:0;"></div>';
+      if (!m.mapa) {
+        const contenedor = `${m.canvas}Leaflet`;
+        document.getElementById(m.canvas).innerHTML = `<div id="${contenedor}" style="position:absolute; inset:0;"></div>`;
         // preferCanvas: los marcadores no son SVG, así no les afecta el estilo del placeholder.
-        mapa = L.map('mapaLeaflet', { preferCanvas: true });
+        m.mapa = L.map(contenedor, { preferCanvas: true });
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(mapa);
-        capaMarcadores = L.layerGroup().addTo(mapa);
+        }).addTo(m.mapa);
+        m.capa = L.layerGroup().addTo(m.mapa);
       }
-      capaMarcadores.clearLayers();
+      m.capa.clearLayers();
       const puntos = conCoordenadas.map(i => {
         const color = COLOR_BADGE[(ESTADOS[i.estado_actual] || {}).badge] || '#64748b';
         const estimada = i.coordenadas.tipo === 'estimadas';
         const punto = [i.coordenadas.lat, i.coordenadas.lon];
         L.circleMarker(punto, {
           radius: 9, color, weight: 2, fillColor: color, fillOpacity: estimada ? 0.3 : 0.85, dashArray: estimada ? '4 4' : null,
-        }).bindPopup(`<strong>${esc(i.id_afectacion)}</strong><br>${esc(TIPOS[i.tipo_afectacion] || i.tipo_afectacion)} · ${esc(estadoLabel(i.estado_actual))}<br>
+        }).bindPopup(`<strong>${esc(i.comunidad || i.id_afectacion)}</strong><br>${esc(TIPOS[i.tipo_afectacion] || i.tipo_afectacion)} · ${esc(estadoLabel(i.estado_actual))}<br>
           ${esc(i.ubicacion_reportada || i.zona || '')}<br><small>Coordenadas ${estimada ? 'estimadas (no confirmadas)' : 'confirmadas'} · ${esc(i.certeza_ubicacion || '')}</small>`)
-          .addTo(capaMarcadores);
+          .addTo(m.capa);
         return punto;
       });
-      limites = L.latLngBounds(puntos).pad(0.3);
-      ajustarMapa();
+      m.limites = L.latLngBounds(puntos).pad(0.3);
+      ajustarMapa(m);
+    }
+
+    function renderMapa(items) {
+      const conCoordenadas = items.filter(i => i.coordenadas);
+      Object.values(MAPAS).forEach(m => dibujarMapa(m, conCoordenadas));
     }
 
     // Leaflet necesita recalcular su tamaño cuando la pestaña oculta se muestra.
-    document.querySelector('[data-target="tab-mapa"]').addEventListener('click', () => {
-      setTimeout(ajustarMapa, 50);
+    Object.keys(MAPAS).forEach(tab => {
+      document.querySelector(`[data-target="${tab}"]`).addEventListener('click', () => setTimeout(() => ajustarMapa(MAPAS[tab]), 50));
     });
-    window.addEventListener('hashchange', () => {
-      if (location.hash === '#tab-mapa') setTimeout(ajustarMapa, 50);
-    });
+    window.addEventListener('hashchange', () => setTimeout(() => ajustarMapa(MAPAS[location.hash.slice(1)]), 50));
 
     /* ---------- Conexión con la API (GET /api/incidents) ---------- */
     const NIVELES = { 1: 'Nivel 1 · Hospital', 2: 'Nivel 2 · Policlínica', 3: 'Nivel 3 · Centro de salud', 4: 'Nivel 4 · Escuela', 5: 'Nivel 5 · Otras' };
