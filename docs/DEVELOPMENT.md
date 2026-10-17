@@ -41,7 +41,7 @@ uv run water-coordinator traza PLAN-xxxx
 | `demo --sin-aprobacion` | Igual, pero deja los planes pendientes de aprobación. |
 | `aprobar … --simulada` | Registra la decisión del supervisor sobre un plan. |
 | `estado` | Estado de las integraciones. |
-| `estado --comprobar` | Igual, con llamadas reales a los servicios configurados. |
+| `estado --comprobar` | Igual, con llamadas reales a los servicios configurados. Para la base de datos ejecuta `SELECT 1` (y en SQLite crea el archivo y las tablas si no existen). |
 | `traza PLAN-xxxx` | Eventos registrados para ese id (o para un `AFE-…`). |
 
 La base SQLite queda en `storage/water.db`, que está ignorada por git. Para una base temporal:

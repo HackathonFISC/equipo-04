@@ -39,6 +39,7 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | D-014 | FAQ del panel en `admin.html`, debajo de «Notificaciones recientes», con las clases existentes. | 2026-10-17 | Usuaria |
 | D-015 | **Langfuse** (SDK oficial 5.x) para observar las ejecuciones del pipeline: desactivado por defecto, una traza por ejecución y una observación por agente, sin datos sensibles. | 2026-10-17 | Usuaria |
 | DEC-C16 | **Capacidad por tipo** (resuelve C-03). Todas las Small cargan entre 3.000 y 5.500 gal; todas las Big, entre 9.000 y 13.000 gal. El máximo es la capacidad que se usa para la cobertura y el mínimo es la carga mínima. Cuando el tipo no se conoce (la disponibilidad por horario no lo indica), se usa el menor máximo, 5.500 gal, para no sobrestimar. | 2026-10-17 | Usuaria |
+| D-016 | `estado --comprobar` comprueba la base de datos de verdad: abre la conexión, ejecuta `SELECT 1` y responde `CONNECTED` o `ERROR`. En SQLite crea el archivo y las tablas si no existen. | 2026-10-17 | Usuaria |
 
 ## Conflictos que necesitan confirmación
 
