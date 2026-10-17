@@ -104,7 +104,10 @@ Frontend: HTML, CSS y JavaScript.
 Fuentes de datos
 
 Reportes: simulados en data/simulados/reportes.json, con contactos ficticios sim:*. No se usan datos reales de ciudadanos.
-Reglas operativas: docs/AGENT_CRITERIA_AND_DECISION_RULES.md (rev.4) y las decisiones de docs/DECISIONS.md. Incluyen la demanda de referencia (79,3 gal/persona urbana, 26,4 rural, 4 por estudiante y valores fijos para salud), los promedios de ocupación, la flota de 71 cisternas (Small 3.000–5.500 gal, Big 9.000–13.000 gal) y los horarios de disponibilidad.
+
+Reglas operativas: docs/AGENT_CRITERIA_AND_DECISION_RULES.md (rev.4) y las decisiones de docs/DECISIONS.md. 
+
+Incluyen la demanda de referencia (79,3 gal/persona urbana, 26,4 rural, 4 por estudiante y valores fijos para salud), los promedios de ocupación, la flota de 71 cisternas (Small 3.000–5.500 gal, Big 9.000–13.000 gal) y los horarios de disponibilidad.
 Territorio: distritos de Panamá Oeste y corregimientos de La Chorrera y Arraiján (services/territorio.py).
 Cartografía: OpenStreetMap, vía Nominatim y las teselas de OSM.
 
@@ -129,16 +132,17 @@ Más detalle en docs/API_SETUP.md.
 Cargar datos de demostración. --reiniciar vacía la base local de desarrollo:
 uv run water-coordinator demo --reiniciar --sin-aprobacion
 Iniciar la API (terminal 1):
-uv run uvicorn water_coordinator.api.app:app --reload --host 127.0.0.1 --port 8000
+```bash uv run uvicorn water_coordinator.api.app:app --reload --host 127.0.0.1 --port 8000 ```
 Documentación interactiva: http://127.0.0.1:8000/docs
 
 Iniciar el panel (terminal 2):
-uv run python -m http.server 5500 --bind 127.0.0.1 -d frontend
+```bash uv run python -m http.server 5500 --bind 127.0.0.1 -d frontend ```
 Abrir http://127.0.0.1:5500/admin.html y http://127.0.0.1:5500/gestion.html. Abrirlos como archivo (file://) no funciona.
 
 Pruebas y estado de las integraciones:
-uv run pytest -q
-uv run water-coordinator estado
+```bash uv run pytest -q ```
+```bash uv run water-coordinator estado```
+
 La API no tiene autenticación y está pensada solo para uso local (127.0.0.1). Las aprobaciones desde el panel se registran como simuladas y ningún mensaje se envía realmente.
 
 
