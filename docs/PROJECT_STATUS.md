@@ -1,50 +1,79 @@
 # Estado del proyecto
 
-**Fase actual:** diseño. Última actualización: 2026-10-16.
+**Fase actual:** construcción, etapa 1 (versión funcional mínima). Última actualización: 2026-10-17.
 
-## Trabajo realizado en el repositorio
+## Trabajo realizado
 
-- 2026-10-16 — Preparación inicial:
-  - Estructura `src/water_coordinator/` (`main.py`, `config.py`, subpaquetes vacíos `schemas`, `agents`, `tools`, `services`, `orchestration`, `api`).
-  - `pyproject.toml` mínimo sin dependencias; `uv.lock` generado por `uv sync`.
-  - `docs/`: `PROJECT_STATUS.md`, `REQUIREMENTS.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `TOOLING.md`, `ROADMAP.md`.
-  - `.env.example`, `.gitignore`, `.claude/CLAUDE.md`, `tests/testsresults.md`, `data/.gitkeep`.
-  - `README.md` no modificado (se mantiene manualmente).
+### 2026-10-16: preparación del repositorio
+
+- Estructura `src/`, la documentación inicial, `.env.example`, `.gitignore` y `.claude/CLAUDE.md`.
+- Commit `7c7f9c2`.
+
+### 2026-10-17: construcción, etapa 1
+
+- **Documento de criterios** rev.4 copiado sin cambios a `docs/AGENT_CRITERIA_AND_DECISION_RULES.md`.
+- **Agentes AutoGen:**
+  - A1 Ingesta: clasificación por palabras clave, fecha del incidente, datos reportados y duplicados; contraste opcional con el modelo de IA.
+  - A2 Geolocalización: certeza explícita, distritos de Panamá Oeste y Nominatim opcional.
+  - A3 Priorización: jerarquía; T, V y A redondeados a 0,5; P, rango si faltan datos, empates.
+  - A4 Planificación: demanda 1/2/2 días, flota de 71 cisternas, horarios, cobertura y tipo de aprobación.
+  - A6 Comunicación: plantillas de estado y de cobertura parcial; mensajería simulada.
+- **Reglas del Agente 5** (clasificación de rutas, límite de 1.000 km, excepción) y adaptador OSRM, fuera del flujo de la etapa 1.
+- **Función de control del supervisor:** aprobación, rechazo o cambios; simulada o real; nunca marca "ejecutado".
+- **Persistencia:** SQLAlchemy sobre SQLite, preparada para PostgreSQL. Traza solo de adición y reportes originales inmutables.
+- **Adaptadores sin credenciales:** modelo de IA (OpenAI, compatible con OpenAI/Ollama, Anthropic), Nominatim, OSRM, WhatsApp (simulado y Cloud API), Whisper local, Google STT, almacenamiento local y logs JSON con redacción de secretos.
+- **CLI:** `demo`, `aprobar`, `estado` y `traza`.
+- **Datos simulados:** `data/simulados/reportes.json`, 6 reportes con contactos ficticios `sim:*`.
+- **Documentación nueva:** `KEYWORDS.md`, `API_SETUP.md`, `INTEGRATIONS.md` y `DEVELOPMENT.md`. Actualizados: `DECISIONS`, `ARCHITECTURE`, `TOOLING`, `ROADMAP`, `REQUIREMENTS` y `.claude/CLAUDE.md`.
+- **Grafo del código** con graphify en `graphify-out/` (ver ARCHITECTURE.md).
+- `frontend/` **no se tocó** (D-009). `README.md` no se tocó.
 
 ## Decisiones
 
-- Confirmadas: ver `DECISIONS.md` § Aprobadas (Python + `src/`, `uv`, README manual, sin datos personales ni secretos).
-- Pendientes: framework de agentes, LLM, persistencia, optimización, API, interfaz, pruebas/evals, fuentes de datos, agentes e intervención humana.
+- **Confirmadas:** D-001 a D-009 y DEC-C01 a DEC-C14 en [DECISIONS.md](DECISIONS.md).
+- **Conflictos abiertos:**
+  - C-01: ¿se compensa en la demanda la mitad del tiempo sin agua? Hoy se aplica DEC-01, que dice que no.
+  - C-02: 19:00–20:00.
+  - C-03: capacidad concreta por unidad.
+- **Supuestos de prototipo:** P-001 a P-012.
 
-## Dependencias instaladas
+## Dependencias instaladas (`.venv` local, no global)
 
-- Ninguna dependencia de ejecución.
-- Solo el propio paquete `water-coordinator` en modo editable en `.venv/` local (backend de build `uv_build`, descargado a la caché de uv).
+| Grupo | Paquetes |
+| --- | --- |
+| Ejecución | `autogen-core` 0.7.5, `autogen-ext[openai,anthropic]` 0.7.5, `pydantic` 2.14, `pydantic-settings` 2.16, `sqlalchemy` 2.1.5, `httpx` |
+| Desarrollo | `pytest` 9.1, `pytest-asyncio` 1.4 |
+| Opcionales (no instalados) | `faster-whisper` (`transcripcion-local`), `google-cloud-speech` (`transcripcion-google`) |
+| Herramienta externa | `graphifyy` 0.9.82, instalado con `uv tool` en el perfil del usuario (no en el proyecto) para generar el grafo |
 
-## Comprobaciones ejecutadas (2026-10-16)
+## Comprobaciones ejecutadas (2026-10-17)
 
 | Comprobación | Resultado |
-|--------------|-----------|
-| Versiones: `git --version`, `uv --version`, `uv python list` | Git 2.55.0, uv 0.12.23, CPython 3.14.8 (uv) |
-| `uv sync` | OK, instala `water-coordinator==0.1.0` |
-| `uv run water-coordinator` | OK, imprime versión y entorno |
-| `APP_ENV=test uv run water-coordinator` | OK, refleja la variable |
-| Import de todos los subpaquetes + assert de `config.APP_ENV` | OK |
-| `git check-ignore` sobre `.env`, `.venv`, `data/*` | Ignorados; `.env.example` y `data/.gitkeep` no ignorados |
-| Búsqueda de patrones de secretos (`sk-`, `api_key=`, `password=`) | Sin coincidencias |
+| --- | --- |
+| `uv sync` | OK, con `system-certs` por la intercepción TLS. |
+| `uv run pytest -q` | **76 aprobadas, 5 omitidas** (integración sin credenciales), en unos 7 s. |
+| `uv run water-coordinator demo` (base temporal) | Flujo completo: 6 reportes → 5 afectaciones priorizadas (1 indeterminada retenida en A1) → 5 planes → 5 mensajes simulados → 5 aprobaciones simuladas registradas. |
+| `uv run water-coordinator estado --comprobar` | Modelo de IA, geocodificación, rutas, transcripción y mapas: `NOT_CONFIGURED`. Mensajería simulada, base de datos y archivos: `CONFIGURED`. Monitoreo externo: `DISABLED`. Ninguno `CONNECTED`. |
+| Servicios reales | **Ninguno probado:** no hay credenciales. |
+| graphify (AST) | 347 nodos, 699 aristas, 19 comunidades. Aviso: 146 aristas a símbolos externos y 70 colapsadas. |
 
 ## Problemas encontrados
 
-- `python` no está en PATH (alias de Microsoft Store) y `py` usa Python 3.4.3 por defecto. Solución: usar `uv run`.
-- La consola de Windows muestra mal los acentos en la salida (`dise�o`); es un tema de codificación de la terminal, no del código.
+- **Primera ejecución de la suite:** quedó colgada más de 5 minutos. Al repetirla archivo por archivo y luego completa terminó en unos 7 s, y no se volvió a reproducir. La causa no está confirmada; lo más probable es la primera importación o compilación del entorno.
+- **Nombres de handlers:** AutoGen exige que el parámetro del `message_handler` se llame `message`. Corregido.
+- **Logs de AutoGen:** en nivel INFO incluían los mensajes completos, con contactos. Ahora se silencian en INFO.
+- **Variables vacías:** las de `.env.example` rompían los campos numéricos. Corregido con `env_ignore_empty`.
+- **Caché de graphify:** se creó una caché dentro de `src/`. Se eliminó y se añadió a `.gitignore`.
 
 ## Bloqueos
 
-- Ninguno técnico. El avance depende de cerrar decisiones de diseño.
+- Los conflictos C-01 y C-03 necesitan respuesta de la usuaria.
+- El Agente 5 no puede entrar al flujo sin la ubicación de la organización ni los datos de autonomía.
 
 ## Próximos pasos
 
-1. Cerrar requisitos funcionales y lista de agentes con el equipo.
-2. Aprobar framework de agentes, persistencia e interfaz (`DECISIONS.md`).
-3. Definir framework de pruebas y métrica de evals (≥ 15 casos).
-4. Definir formato de datos sintéticos para `data/`.
+1. Resolver C-01, C-02 y C-03.
+2. Incorporar DEC-C01 a DEC-C14 al documento de criterios (rev.5), si el equipo lo aprueba.
+3. Elegir proveedor de IA (Ollama local es gratis) y configurar Nominatim.
+4. Etapa 2: Agente 5 en el flujo e interfaz del supervisor en el frontend.
+5. Ampliar las evals a 15 casos o más, con métrica (requisito de entrega).

@@ -21,8 +21,10 @@ htmlcov/
 # Datos locales (solo se versionan ejemplos sintéticos explícitos)
 data/*
 !data/.gitkeep
+!data/simulados/
 *.db
 *.sqlite3
+storage/
 
 # Configuración local de Claude Code
 .claude/settings.local.json
@@ -32,3 +34,9 @@ data/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# graphify: se versionan graph.html, graph.json y GRAPH_REPORT.md; no cachés ni rutas locales
+graphify-out/cache/
+graphify-out/.graphify_*
+graphify-out/cost.json
+graphify-out/manifest.json

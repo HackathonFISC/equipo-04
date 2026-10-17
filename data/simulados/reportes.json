@@ -1,0 +1,48 @@
+{
+  "_nota": "DATOS SIMULADOS para pruebas. Contactos ficticios (sim:*); no son personas reales.",
+  "momento_planificacion": "2026-10-17T10:00:00-05:00",
+  "reportes": [
+    {
+      "id_reporte": "REP-SIM-001",
+      "canal": "whatsapp_simulado",
+      "texto": "#sinagua #idaan Buenas, en Vista Alegre, Arraiján no hay agua desde hace 2 días. Somos 20 casas y hay muchos niños.",
+      "recibido_en": "2026-10-17T08:00:00-05:00",
+      "contacto": "sim:usuario-001"
+    },
+    {
+      "id_reporte": "REP-SIM-002",
+      "canal": "transcripcion_audio",
+      "texto": "Hola, le hablo de la escuela en Barrio Colón, La Chorrera. Se rompió la tubería frente a la escuela desde ayer y no llega el agua.",
+      "recibido_en": "2026-10-17T07:30:00-05:00",
+      "contacto": "sim:usuario-002"
+    },
+    {
+      "id_reporte": "REP-SIM-003",
+      "canal": "whatsapp_simulado",
+      "texto": "#aguacontaminada el agua sale turbia y con mal olor, el agua huele mal. Somos 3 edificios de apartamentos en Nuevo Chorrillo, Arraiján. Empezó desde el lunes.",
+      "recibido_en": "2026-10-17T09:15:00-05:00",
+      "contacto": "sim:usuario-003"
+    },
+    {
+      "id_reporte": "REP-SIM-004",
+      "canal": "whatsapp_simulado",
+      "texto": "#faltadeagua comunidad rural en Cirí Grande, Capira, 20 viviendas rurales sin agua.",
+      "recibido_en": "2026-10-17T06:45:00-05:00",
+      "contacto": null
+    },
+    {
+      "id_reporte": "REP-SIM-005",
+      "canal": "transcripcion_audio",
+      "texto": "Le llamo del hospital en La Chorrera, estamos sin agua desde esta mañana.",
+      "recibido_en": "2026-10-17T09:40:00-05:00",
+      "contacto": "sim:usuario-005"
+    },
+    {
+      "id_reporte": "REP-SIM-006",
+      "canal": "whatsapp_simulado",
+      "texto": "Buenas tardes, quisiera saber el horario de atención de las oficinas.",
+      "recibido_en": "2026-10-17T09:50:00-05:00",
+      "contacto": "sim:usuario-006"
+    }
+  ]
+}

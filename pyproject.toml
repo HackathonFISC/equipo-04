@@ -1,10 +1,25 @@
 [project]
 name = "water-coordinator"
-version = "0.1.0"
-description = "Centro de coordinación agéntico para la crisis del agua en Panamá Oeste (fase de diseño)."
+version = "0.2.0"
+description = "Centro de coordinación agéntico para la crisis del agua en Panamá Oeste (fase de construcción)."
 requires-python = ">=3.12"
-# Sin dependencias hasta que se aprueben en docs/DECISIONS.md.
-dependencies = []
+dependencies = [
+    "autogen-core>=0.7,<0.8",
+    "autogen-ext[openai,anthropic]>=0.7,<0.8",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.6",
+    "sqlalchemy>=2.0",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+# Transcripción local con Whisper (faster-whisper / CTranslate2). Descarga modelos la primera vez.
+transcripcion-local = ["faster-whisper>=1.1"]
+# Adaptador opcional de Google Cloud Speech-to-Text (servicio de pago).
+transcripcion-google = ["google-cloud-speech>=2.27"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
 
 [project.scripts]
 water-coordinator = "water_coordinator.main:main"
@@ -12,3 +27,12 @@ water-coordinator = "water_coordinator.main:main"
 [build-system]
 requires = ["uv_build>=0.9,<0.13"]
 build-backend = "uv_build"
+
+[tool.uv]
+# En esta máquina un antivirus/proxy intercepta TLS; usar el almacén de certificados de Windows.
+system-certs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["integration: requiere servicio externo; se activa con RUN_INTEGRATION_<PROVEEDOR>=1"]
