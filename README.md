@@ -150,9 +150,26 @@ La API no tiene autenticación y está pensada solo para uso local (127.0.0.1). 
 
 Al menos 15 casos de prueba, métrica y resultados.
 
+
 ## Bitácora de IA
 
-Qué partes se hicieron con IA, con qué herramienta y qué se modificó a mano.
+| Parte del proyecto | Herramienta de IA | Qué hizo la IA | Qué se decidió o modificó a mano |
+| --- | --- | --- | --- |
+| Documento de criterios y reglas de decisión (`docs/AGENT_CRITERIA_AND_DECISION_RULES.md`, rev.4) | ChatGPT | Redactó la especificación de los 6 agentes, sus reglas, estados y matriz de autonomía a partir de los requisitos del equipo. | El equipo respondió las preguntas de diseño y confirmó o descartó reglas (DEC-01 a DEC-27). Se copió al repo sin cambios. |
+| Estructura del repositorio y documentación base (`docs/`, `.env.example`, `.gitignore`, `CLAUDE.md`) | Claude Code (Claude Opus) | Creó la estructura `src/`, la documentación inicial y la configuración segura sin secretos. | El README lo mantiene el equipo a mano; la IA no lo editó. |
+| Decisiones de negocio posteriores (DEC-C01 a DEC-C16) | — (equipo) | La IA propuso las fórmulas de V y A y la escala de confianza cuando se le pidió «a su discreción», y señaló conflictos (C-01 a C-03). | La usuaria decidió: redondeo a 0,5, flota de 71 (10/5 propias, 40/16 subcontratadas), horarios, capacidades por tipo, la compensación del 50 % del tiempo sin agua en la demanda y la cobertura mínima del 80 %. |
+| Sistema multiagente (A1–A4, A6), orquestación AutoGen, reglas deterministas, persistencia, adaptadores, CLI | Claude Code | Implementó el código, los datos simulados y las pruebas automatizadas (112 aprobadas). | Las reglas siguen el documento rev.4 y las decisiones del equipo. Los conflictos con el documento se consultaron antes de aplicarse. |
+| Palabras clave (`docs/KEYWORDS.md`) | Claude Code | Amplió la lista con formas habladas y regionalismos panameños («pluma», «botando agua», «idan»). | El equipo definió los hashtags base: `#idaan`, `#sinagua`, `#faltadeagua`, `#tuberiarota`. |
+| Diseño del frontend (`frontend/`: páginas, CSS, imágenes) | Herramienta no registrada en el repo (completar por el equipo) | — | Diseño visual del equipo (PR #1). |
+| Conexión del frontend con la API, estadísticas, mapa Leaflet, comunidades, FAQ | Claude Code | Escribió el JavaScript (`js/api.js` y los scripts de las páginas) y la API FastAPI, conservando el diseño. Se verificó con capturas antes y después. | El equipo aprobó cada cambio visual (bloque FAQ, filtros con estados reales). El CSS no se modificó. |
+| Observabilidad con Langfuse | Claude Code con la skill oficial `langfuse` (github.com/langfuse/skills) | Instrumentó las trazas siguiendo la guía de buenas prácticas, envió trazas reales y las auditó dos veces, corrigiendo lo detectado. | La usuaria creó el proyecto de Langfuse y puso las claves en `.env`. |
+| Clasificación con IA en tiempo de ejecución | Claude (`claude-sonnet-5-5`) vía Claude Code | Contrasta la clasificación del Agente 1. Solo interpreta texto; si discrepa de las reglas, el caso va a revisión humana. | La usuaria decidió no usar créditos de la API: se usa la sesión de la app de escritorio (proveedor `claude_code`). |
+| Grafo del código (`graphify-out/`) | Skill graphify (extracción AST, sin LLM) | Generó el mapa de módulos, dependencias y comunidades del código. | — |
+
+**Revisión humana:** todo commit se hizo con autorización explícita de la usuaria. Ninguna credencial, dato personal real ni envío externo pasó por la IA. Las aprobaciones de planes desde el panel quedan marcadas como simuladas.
+
+[Bitacora_de_prompts_equipo04 ChatGPT.docx](https://github.com/user-attachments/files/33598646/Bitacora_de_prompts_equipo04.ChatGPT.docx)
+
 
 ---
 
