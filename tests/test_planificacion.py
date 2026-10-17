@@ -32,14 +32,22 @@ def test_viviendas_rurales():
     assert calcular_demanda(registro("#sinagua 20 viviendas rurales")).demanda_diaria_gal == 2112
 
 
-def test_duraciones_por_tipo_y_sin_compensacion_temporal():
+def test_duraciones_por_tipo_mas_mitad_del_tiempo_sin_agua():
     falta = calcular_demanda(registro("#sinagua hace 2 días, 10 casas"))
     rota = calcular_demanda(registro("#tuberiarota hace 2 días, 10 casas"))
     contaminada = calcular_demanda(registro("#aguacontaminada hace 2 días, 10 casas"))
-    assert (falta.dias_planificacion, rota.dias_planificacion, contaminada.dias_planificacion) == (1, 2, 2)
-    assert falta.demanda_estimada_gal == round(10 * 3 * 79.3, 2)  # 2 días sin agua no se suman (DEC-01)
-    assert priorizar(registro("#sinagua hace 2 días, 10 casas")).T == 40  # …pero sí suben la prioridad
+    # DEC-C15: duración (1/2/2) + 0,5 × 2 días sin agua hasta el reporte
+    assert (falta.dias_planificacion, rota.dias_planificacion, contaminada.dias_planificacion) == (2, 3, 3)
+    assert falta.dias_compensados == 1
+    assert falta.demanda_estimada_gal == round(10 * 3 * 79.3 * 2, 2)
+    assert priorizar(registro("#sinagua hace 2 días, 10 casas")).T == 40  # y también sube la prioridad
     assert any("agua de cisterna está limpia" in s for s in contaminada.supuestos)
+
+
+def test_sin_fecha_no_hay_compensacion_y_se_avisa():
+    d = calcular_demanda(registro("#sinagua 10 casas"))
+    assert d.dias_planificacion == 1 and d.dias_compensados == 0
+    assert any("subestimada" in s for s in d.supuestos)
 
 
 def test_instalaciones_de_salud_valor_fijo_diario():
@@ -68,13 +76,14 @@ def test_flota_registrada_71():
     assert len(f) == 71
     assert sum(c.origen == "organizacion" and c.tipo == "small" for c in f) == 10
     assert sum(c.origen == "subcontratada" and c.tipo == "big" for c in f) == 16
-    assert all(c.capacidad_es_supuesto for c in f)  # capacidad concreta no documentada
+    assert not any(c.capacidad_es_supuesto for c in f)  # el rango del tipo es la capacidad (DEC-C16)
 
 
-def test_capacidad_desconocida_usa_minimo_y_concreta_se_respeta():
-    assert cisterna("X", "big", "organizacion").capacidad_galones == 9000
-    assert cisterna("X", "desconocido", "organizacion").capacidad_galones == 3000
-    assert cisterna("X", "big", "organizacion", 12000).capacidad_es_supuesto is False
+def test_rango_de_carga_por_tipo():
+    big, small, desconocido = (cisterna("X", t, "organizacion") for t in ("big", "small", "desconocido"))
+    assert (big.capacidad_min_galones, big.capacidad_galones) == (9000, 13000)
+    assert (small.capacidad_min_galones, small.capacidad_galones) == (3000, 5500)
+    assert desconocido.capacidad_galones == 5500 and desconocido.capacidad_es_supuesto  # menor máximo
 
 
 @pytest.mark.parametrize("hora,org,sub,demora", [
@@ -106,7 +115,7 @@ def _plan(textos, momento):
 
 
 def test_noche_no_supera_inventario_y_documenta_deficit():
-    planes = _plan(["#sinagua 5 edificios de apartamentos hace 1 día en Arraiján"], a_las(22))  # 39.650 gal > 10 × 3.000
+    planes = _plan(["#sinagua 10 edificios de apartamentos hace 1 día en Arraiján"], a_las(22))  # 118.950 gal > 10 × 5.500
     p = planes[0]
     assert len(p.cisternas_asignadas) == 10 and p.cobertura_pct < 80
     assert p.tipo_aprobacion == "extraordinaria" and p.solicitudes_adicionales == []

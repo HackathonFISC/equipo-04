@@ -191,7 +191,8 @@ class Cisterna(BaseModel):
     id: str
     tipo: Literal["small", "big", "desconocido"]
     origen: Literal["organizacion", "subcontratada"]
-    capacidad_galones: float
+    capacidad_min_galones: float  # carga mínima del tipo
+    capacidad_galones: float  # carga máxima: la que se usa para la cobertura
     capacidad_es_supuesto: bool
     tanque_combustible_litros: float | None
 
@@ -199,7 +200,8 @@ class Cisterna(BaseModel):
 class CalculoDemanda(BaseModel):
     id_afectacion: str
     demanda_diaria_gal: float | None
-    dias_planificacion: int | None
+    dias_planificacion: float | None  # duración del tipo + compensación
+    dias_compensados: float = 0.0
     demanda_estimada_gal: float | None
     formula: str
     bases: list[str] = Field(default_factory=list)

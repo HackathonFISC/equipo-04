@@ -3,7 +3,7 @@
 | Fase | Objetivo | Estado |
 | --- | --- | --- |
 | 0. Preparación | Estructura, documentación y configuración mínima. | Completada (2026-10-16) |
-| 1. Diseño | Documento de criterios rev.4 y decisiones DEC-C. | Completada; los conflictos C-01 a C-03 siguen abiertos |
+| 1. Diseño | Documento de criterios rev.4 y decisiones DEC-C. | Completada; C-01 y C-03 resueltos, C-02 mantenido |
 | **2. Construcción, etapa 1** | Reporte → A1 → A2 → A3 → A4 → plan → aprobación simulada → traza; integraciones sin credenciales. | **Completada (2026-10-17)** |
 | 3. Construcción, etapa 2 | Agente 5 en el flujo (OSRM y ubicación de la organización), alternativas de ruta y excepción de 1.000 km. | Pendiente de datos [PEND] |
 | 4. Interfaz | Mapa Leaflet e interfaz del supervisor en `frontend/`; backend HTTP si se aprueba. | Pendiente (frontend congelado) |
@@ -22,6 +22,6 @@
 | Supervisor | `services/aprobacion.py`, `water-coordinator aprobar` | Hecho |
 | Adaptadores | `tools/*.py` | Hechos, sin credenciales |
 | Datos simulados | `data/simulados/reportes.json` | Hecho |
-| Pruebas | `tests/` | 76 aprobadas y 5 de integración omitidas |
+| Pruebas | `tests/` | 77 aprobadas y 5 de integración omitidas |
 | Documentación | `docs/*.md` | Hecha |
 | Grafo del código | `graphify-out/` | Hecho |

@@ -3,10 +3,12 @@
 import json
 from pathlib import Path
 
-VERSION_REGLAS = "criterios-1.0-rev.4+construccion-2026-10-17"
+VERSION_REGLAS = "criterios-1.0-rev.4+dec-c16-2026-10-17"
 
 # DEC-05/24/27 [CONF] — duración de planificación en días por tipo.
 DURACION_DIAS = {"falta_de_agua": 1, "tuberia_rota": 2, "agua_contaminada": 2}
+# DEC-C15 — se suma a la duración la mitad de los días sin agua hasta el reporte.
+FACTOR_COMPENSACION = 0.5
 
 # DOC §4.4.C [CONF] — demanda diaria de referencia (galones/día).
 GAL_PERSONA_URBANA = 79.3
@@ -32,8 +34,10 @@ V_MODIFICADORES = {"comunidad_antigua": 10, "poblacion_infantil_joven": 10}
 # Cobertura (DOC §4.4.E A4-R6..R8) [CONF].
 COBERTURA_MINIMA_PCT = 80.0
 
-# DOC A4-R15 — rango de capacidad de agua por tipo (galones). Si no se conoce la capacidad concreta se usa el mínimo.
+# DEC-C16 — toda cisterna de un tipo carga entre el mínimo y el máximo de su rango (galones).
 CAPACIDAD_GAL = {"small": (3000.0, 5500.0), "big": (9000.0, 13000.0)}
+# Tipo no indicado (p. ej. disponibilidad por horario): se toma el menor máximo (Small) para no sobrestimar.
+CAPACIDAD_TIPO_DESCONOCIDO = (CAPACIDAD_GAL["small"][0], min(r[1] for r in CAPACIDAD_GAL.values()))
 # DEC-09 [CONF] — tanque de combustible (litros). No se infiere autonomía.
 TANQUE_LITROS = {"small": 400.0, "big": 600.0}
 

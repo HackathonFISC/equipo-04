@@ -53,7 +53,7 @@ async def test_paquete_incompleto_no_se_aprueba_en_real(repo):
 
 
 async def test_extraordinaria_exige_justificacion(repo):
-    res, _ = await _flujo(repo, ["#sinagua 12 edificios de apartamentos en Arraiján hace 1 día"])  # 95.160 gal; 25 × 3.000 = 78,8 %
+    res, _ = await _flujo(repo, ["#sinagua 15 edificios de apartamentos en Arraiján hace 1 día"])  # 178.425 gal; 25 × 5.500 = 77 %
     plan = res.planes.planes[0]
     assert plan.tipo_aprobacion == "extraordinaria"
     with pytest.raises(ErrorAprobacion, match="justificación"):

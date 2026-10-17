@@ -5,9 +5,10 @@ from water_coordinator.services import parametros as p
 
 
 def calcular_demanda(reg: RegistroAfectacion) -> CalculoDemanda:
-    """A4-R1/R3 [CONF]: demanda = demanda diaria × días de planificación del tipo.
+    """A4-R1/R3: demanda = demanda diaria × (duración del tipo + 50 % de los días sin agua hasta el reporte).
 
-    El tiempo sin agua NO se suma (DEC-01): solo afecta a la prioridad.
+    DEC-C15 (usuaria, 2026-10-17) reemplaza a DEC-01 del documento: el tiempo sin agua sube la prioridad (T)
+    y además se compensa la mitad en la demanda. Los días sin agua se cuentan del incidente a la recepción.
     """
     d = reg.datos_adicionales
     bases, supuestos, faltan = [], [], []
@@ -41,16 +42,21 @@ def calcular_demanda(reg: RegistroAfectacion) -> CalculoDemanda:
         faltan.append("tipo de afectación determinado")
     if reg.tipo_afectacion == TipoAfectacion.AGUA_CONTAMINADA:
         supuestos.append("Supuesto de planificación (DEC-17): el agua de cisterna está limpia; no es certificación sanitaria.")
+    compensacion = 0.0
     if reg.dias_sin_agua is None:
-        supuestos.append("Fecha del incidente desconocida: no afecta a la demanda (DEC-01), sí a la prioridad.")
+        supuestos.append("Fecha del incidente desconocida: sin compensación temporal; la demanda puede estar subestimada (A4-R4).")
+    else:
+        compensacion = round(p.FACTOR_COMPENSACION * reg.dias_sin_agua, 4)
 
     completa = bool(bases) and dias is not None and d.instalacion_mencionada != "incierta"
+    total_dias = dias + compensacion if dias is not None else None
     return CalculoDemanda(
         id_afectacion=reg.id_afectacion,
         demanda_diaria_gal=round(diaria, 2) if completa else None,
-        dias_planificacion=dias,
-        demanda_estimada_gal=round(diaria * dias, 2) if completa else None,
-        formula="demanda_estimada = demanda_diaria × días_planificación(tipo)",
+        dias_planificacion=total_dias,
+        dias_compensados=compensacion,
+        demanda_estimada_gal=round(diaria * total_dias, 2) if completa else None,
+        formula="demanda_estimada = demanda_diaria × (duración(tipo) + 0,5 × días_sin_agua_hasta_el_reporte)",
         bases=bases,
         supuestos=supuestos,
         datos_faltantes=faltan,

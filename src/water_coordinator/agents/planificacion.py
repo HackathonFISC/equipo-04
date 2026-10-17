@@ -6,7 +6,7 @@ from autogen_core import MessageContext, RoutedAgent, message_handler
 
 from water_coordinator.schemas.models import Certeza, Estado, LotePlanes, PlanPropuesto, SolicitudAdicional, SolicitudPlanificacion
 from water_coordinator.services.demanda import calcular_demanda, cobertura, tipo_aprobacion
-from water_coordinator.services.parametros import CAPACIDAD_GAL, VERSION_REGLAS
+from water_coordinator.services.parametros import CAPACIDAD_TIPO_DESCONOCIDO, VERSION_REGLAS
 
 RUTA_PENDIENTE = {
     "estado": "pendiente",
@@ -46,7 +46,7 @@ def planificar(sol: SolicitudPlanificacion) -> list[PlanPropuesto]:
             cob = cobertura(entregable, dem.demanda_estimada_gal)
             pendiente = round(dem.demanda_estimada_gal - entregable, 2)
             if any(c.capacidad_es_supuesto for c in asignadas):
-                riesgos.append("Capacidad concreta por unidad no documentada: se usa el mínimo del rango (A4-R15).")
+                riesgos.append("El horario no indica el tipo de cada unidad disponible: se asume la carga máxima de una Small.")
             solicitudes = _solicitudes(pendiente, restante_solicitable, demora)
             if pendiente > 0 and not solicitudes:
                 riesgos.append("Déficit sin posibilidad de solicitar más cisternas en este horario.")
@@ -76,10 +76,10 @@ def planificar(sol: SolicitudPlanificacion) -> list[PlanPropuesto]:
 
 
 def _solicitudes(pendiente: float, restante: dict, demora: dict) -> list[SolicitudAdicional]:
-    """Sugiere cuántas cisternas pedir (capacidad mínima Small, conservador). Es una recomendación pendiente de solicitud."""
+    """Sugiere cuántas cisternas pedir (tipo no indicado: carga máxima Small). Es una recomendación pendiente de solicitud."""
     if pendiente <= 0:
         return []
-    necesarias = math.ceil(pendiente / CAPACIDAD_GAL["small"][0])
+    necesarias = math.ceil(pendiente / CAPACIDAD_TIPO_DESCONOCIDO[1])
     out = []
     for origen in ("organizacion", "subcontratada"):
         n = min(necesarias, restante.get(origen, 0))

@@ -27,14 +27,21 @@
 - **Documentación nueva:** `KEYWORDS.md`, `API_SETUP.md`, `INTEGRATIONS.md` y `DEVELOPMENT.md`. Actualizados: `DECISIONS`, `ARCHITECTURE`, `TOOLING`, `ROADMAP`, `REQUIREMENTS` y `.claude/CLAUDE.md`.
 - **Grafo del código** con graphify en `graphify-out/` (ver ARCHITECTURE.md).
 - `frontend/` **no se tocó** (D-009). `README.md` no se tocó.
+- Commit `ab881a0` (etapa 1).
+
+### 2026-10-17: respuestas a los conflictos
+
+- **DEC-C15:** demanda = diaria × (duración + 0,5 × días sin agua hasta el reporte).
+- **DEC-C16:** Small 3.000–5.500 gal y Big 9.000–13.000 gal. Se planifica con el máximo; si el tipo no se conoce, con 5.500 gal.
+- Pruebas y demo actualizadas. La versión de reglas pasa a `criterios-1.0-rev.4+dec-c16-2026-10-17`.
 
 ## Decisiones
 
-- **Confirmadas:** D-001 a D-009 y DEC-C01 a DEC-C14 en [DECISIONS.md](DECISIONS.md).
-- **Conflictos abiertos:**
-  - C-01: ¿se compensa en la demanda la mitad del tiempo sin agua? Hoy se aplica DEC-01, que dice que no.
-  - C-02: 19:00–20:00.
-  - C-03: capacidad concreta por unidad.
+- **Confirmadas:** D-001 a D-009 y DEC-C01 a DEC-C16 en [DECISIONS.md](DECISIONS.md).
+- **Conflictos:**
+  - C-01: resuelto con DEC-C15 (compensación de la mitad del tiempo sin agua en la demanda).
+  - C-03: resuelto con DEC-C16 (rango de carga por tipo).
+  - C-02: horarios reiterados por la usuaria; se mantienen.
 - **Supuestos de prototipo:** P-001 a P-012.
 
 ## Dependencias instaladas (`.venv` local, no global)
@@ -51,8 +58,8 @@
 | Comprobación | Resultado |
 | --- | --- |
 | `uv sync` | OK, con `system-certs` por la intercepción TLS. |
-| `uv run pytest -q` | **76 aprobadas, 5 omitidas** (integración sin credenciales), en unos 7 s. |
-| `uv run water-coordinator demo` (base temporal) | Flujo completo: 6 reportes → 5 afectaciones priorizadas (1 indeterminada retenida en A1) → 5 planes → 5 mensajes simulados → 5 aprobaciones simuladas registradas. |
+| `uv run pytest -q` | **77 aprobadas, 5 omitidas** (integración sin credenciales), en unos 7 s (tras DEC-C15 y DEC-C16). |
+| `uv run water-coordinator demo` (base temporal) | Flujo completo: 6 reportes → 5 afectaciones priorizadas (1 indeterminada retenida en A1) → 5 planes → 5 mensajes simulados (1 de cobertura parcial, al 98,5 %) → 5 aprobaciones simuladas registradas. |
 | `uv run water-coordinator estado --comprobar` | Modelo de IA, geocodificación, rutas, transcripción y mapas: `NOT_CONFIGURED`. Mensajería simulada, base de datos y archivos: `CONFIGURED`. Monitoreo externo: `DISABLED`. Ninguno `CONNECTED`. |
 | Servicios reales | **Ninguno probado:** no hay credenciales. |
 | graphify (AST) | 347 nodos, 699 aristas, 19 comunidades. Aviso: 146 aristas a símbolos externos y 70 colapsadas. |
@@ -67,13 +74,12 @@
 
 ## Bloqueos
 
-- Los conflictos C-01 y C-03 necesitan respuesta de la usuaria.
 - El Agente 5 no puede entrar al flujo sin la ubicación de la organización ni los datos de autonomía.
 
 ## Próximos pasos
 
-1. Resolver C-01, C-02 y C-03.
-2. Incorporar DEC-C01 a DEC-C14 al documento de criterios (rev.5), si el equipo lo aprueba.
+1. Confirmar la lectura de C-02 (19:00–20:00).
+2. Incorporar DEC-C01 a DEC-C16 al documento de criterios (rev.5), si el equipo lo aprueba. DEC-C15 contradice DEC-01 del documento.
 3. Elegir proveedor de IA (Ollama local es gratis) y configurar Nominatim.
 4. Etapa 2: Agente 5 en el flujo e interfaz del supervisor en el frontend.
 5. Ampliar las evals a 15 casos o más, con métrica (requisito de entrega).

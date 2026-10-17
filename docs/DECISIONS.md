@@ -31,14 +31,16 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | DEC-C12 | Los galones son por día. Duración de restauración: falta de agua 1 día, tubería rota 2 días, agua contaminada 2 días. | 2026-10-17 | Usuaria |
 | DEC-C13 | Palabras clave `#idaan #sinagua #faltadeagua #tuberiarota`, con sus equivalentes en voz y las ampliaciones recomendadas ([KEYWORDS.md](KEYWORDS.md)). | 2026-10-17 | Usuaria |
 | DEC-C14 | Whisper local mediante **faster-whisper**, como extra opcional (`transcripcion-local`). | 2026-10-17 | Usuaria |
+| DEC-C15 | **Compensación temporal en la demanda** (resuelve C-01; **reemplaza a DEC-01 del documento en lo que respecta a la demanda**). `días_planificación = duración(tipo) + 0,5 × días_sin_agua`. Los días sin agua se cuentan desde el incidente hasta la recepción del reporte, no hasta la hora de planificación. El tiempo sin agua sigue subiendo la prioridad (T). Si no hay fecha del incidente, no se compensa y se avisa que la demanda puede estar subestimada. | 2026-10-17 | Usuaria |
+| DEC-C16 | **Capacidad por tipo** (resuelve C-03). Todas las Small cargan entre 3.000 y 5.500 gal; todas las Big, entre 9.000 y 13.000 gal. El máximo es la capacidad que se usa para la cobertura y el mínimo es la carga mínima. Cuando el tipo no se conoce (la disponibilidad por horario no lo indica), se usa el menor máximo, 5.500 gal, para no sobrestimar. | 2026-10-17 | Usuaria |
 
 ## Conflictos que necesitan confirmación
 
 | ID | Conflicto | Qué se implementó |
 | --- | --- | --- |
-| C-01 | El mensaje del 2026-10-17 dice "considera también el tiempo sin agua y **compensa la mitad** de ese tiempo". El documento de criterios (DEC-01, A4-R2) y la instrucción de implementación dicen que el tiempo transcurrido **solo afecta a la prioridad**, no a la demanda ni a los días de planificación. | Se aplicó **DEC-01**: el tiempo sin agua sube T y no se suma a la demanda. Si la usuaria confirma la compensación, se cambia una línea en `services/demanda.py` y su prueba. |
-| C-02 | Entre 19:00 y 20:00 la disponibilidad es de 10 subcontratadas, pero la ventana de pedir más con 1,5 h llega hasta las 20:00. | Se aplicaron ambas, según DEC-08: a las 19:00 cambia la disponibilidad y no la demora. Entre 19:00 y 20:00 se pueden sugerir más unidades con 1,5 h de demora; de 20:00 a 06:00, ninguna. |
-| C-03 | "La capacidad concreta debe estar en el documento". El documento solo da rangos: Small 3.000–5.500 gal y Big 9.000–13.000 gal. | Si no se conoce la capacidad concreta de una unidad, se usa el mínimo del rango (A4-R15) y se marca como supuesto. Falta añadir al documento la capacidad de cada unidad. |
+| C-01 | Compensación temporal en la demanda. | **Resuelto (2026-10-17) → DEC-C15.** |
+| C-02 | Entre 19:00 y 20:00 la disponibilidad es de 10 subcontratadas, pero la ventana de pedir más con 1,5 h llega hasta las 20:00. | La usuaria reiteró los mismos horarios el 2026-10-17. Se mantienen ambas reglas: entre 19:00 y 20:00 hay 10 disponibles y se pueden pedir más con 1,5 h; de 20:00 a 06:00 no se puede pedir más. Si se quiere otra lectura, hay que indicarlo. |
+| C-03 | Capacidad concreta de las cisternas. | **Resuelto (2026-10-17) → DEC-C16.** |
 
 ## Propuestas (implementadas como supuestos de prototipo, no aprobadas)
 
@@ -46,7 +48,7 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | --- | --- | --- |
 | P-001 | `requires-python >= 3.12`; el entorno usa CPython 3.14.8. | Versión mínima por confirmar. |
 | P-002 | Backend de build `uv_build`. | Necesario para la estructura `src/`. |
-| P-003 | La disponibilidad por horario no indica el tipo de cada unidad. Esas unidades se tratan como "desconocido" con 3.000 gal (la menor capacidad posible). | No sobrestimar el volumen entregable. |
+| P-003 | La disponibilidad por horario no indica el tipo de cada unidad. Esas unidades se tratan como "desconocido" con 5.500 gal (el menor máximo, DEC-C16). | No sobrestimar el volumen entregable. |
 | P-004 | Si P está incompleto, el orden usa el **punto medio** de su rango. | Ni premia ni penaliza la falta de datos (REQ §7.3). |
 | P-005 | Un viaje por cisterna en cada planificación. | Las vueltas múltiples no están documentadas. |
 | P-006 | Mientras falte la ruta, el paquete de plan queda **incompleto**: solo admite aprobación **simulada** de prueba (§3.3, DEC-19). | Un paquete incompleto no puede presentarse como listo. |
@@ -59,7 +61,7 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 
 ## Pendientes
 
-- Capacidad concreta de cada cisterna (C-03) y tipo de las unidades disponibles en cada horario.
+- Tipo (Small o Big) de las unidades disponibles en cada horario.
 - Consumo y autonomía reales de Small y Big. Sin estos datos, toda ruta queda "pendiente de verificación" y no puede calcularse el máximo de una extensión de emergencia.
 - Ubicación de la organización y puntos de carga por ruta (necesarios para el Agente 5).
 - Umbral de cercanía a instalaciones críticas y fuente de datos de esas instalaciones.

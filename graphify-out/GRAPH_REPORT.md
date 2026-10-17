@@ -1,12 +1,18 @@
 # Graph Report - water_coordinator  (2026-10-17)
 
 ## Corpus Check
-- Corpus is ~9,420 words - fits in a single context window. You may not need a graph.
+- 34 files · ~9,539 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
 - 347 nodes · 699 edges · 19 communities (11 shown, 8 thin omitted)
 - Extraction: 76% EXTRACTED · 24% INFERRED · 0% AMBIGUOUS · INFERRED: 168 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `ab881a0f`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Integraciones y configuración
@@ -35,15 +41,15 @@
 
 ## Surprising Connections (you probably didn't know these)
 - `mensaje_cobertura_parcial()` --uses--> `PlanPropuesto`  [INFERRED]
-  agents/comunicacion.py → schemas/models.py
+  src/water_coordinator/agents/comunicacion.py → src/water_coordinator/schemas/models.py
 - `mensaje_estado()` --uses--> `PlanPropuesto`  [INFERRED]
-  agents/comunicacion.py → schemas/models.py
+  src/water_coordinator/agents/comunicacion.py → src/water_coordinator/schemas/models.py
 - `redactar()` --uses--> `MensajeSaliente`  [INFERRED]
-  agents/comunicacion.py → schemas/models.py
+  src/water_coordinator/agents/comunicacion.py → src/water_coordinator/schemas/models.py
 - `procesar()` --uses--> `AgenteComunicacion`  [INFERRED]
-  orchestration/pipeline.py → agents/comunicacion.py
+  src/water_coordinator/orchestration/pipeline.py → src/water_coordinator/agents/comunicacion.py
 - `zona_por_distrito()` --calls--> `normalizar()`  [INFERRED]
-  agents/geolocalizacion.py → services/clasificacion.py
+  src/water_coordinator/agents/geolocalizacion.py → src/water_coordinator/services/clasificacion.py
 
 ## Import Cycles
 - None detected.

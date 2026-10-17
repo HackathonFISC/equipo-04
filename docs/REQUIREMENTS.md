@@ -26,7 +26,7 @@
 
 ## Requisitos funcionales
 
-La fuente de verdad es [AGENT_CRITERIA_AND_DECISION_RULES.md](AGENT_CRITERIA_AND_DECISION_RULES.md) (rev.4), que define los seis agentes, sus reglas `[CONF]`, `[PROV]`, `[PEND]` y `[PROP]`, y los criterios de aceptación de cada uno (apartado I). Las decisiones de la usuaria del 2026-10-17 que todavía no están en ese documento figuran en [DECISIONS.md](DECISIONS.md) (DEC-C01 a DEC-C14).
+La fuente de verdad es [AGENT_CRITERIA_AND_DECISION_RULES.md](AGENT_CRITERIA_AND_DECISION_RULES.md) (rev.4), que define los seis agentes, sus reglas `[CONF]`, `[PROV]`, `[PEND]` y `[PROP]`, y los criterios de aceptación de cada uno (apartado I). Las decisiones de la usuaria del 2026-10-17 que todavía no están en ese documento figuran en [DECISIONS.md](DECISIONS.md) (DEC-C01 a DEC-C16).
 
 Requisitos de la etapa 1 (instrucción de implementación, 2026-10-17):
 
@@ -34,7 +34,7 @@ Requisitos de la etapa 1 (instrucción de implementación, 2026-10-17):
 - Modelos de datos validados, identificadores únicos, separación entre lógica determinista y modelos de IA.
 - Registro de originales, datos normalizados, cálculos, incertidumbres, decisiones y versión de reglas.
 - Los datos desconocidos se conservan como desconocidos; no se inventan valores.
-- `T = min(100, días_sin_agua / 5 × 100)`. El tiempo transcurrido afecta solo a la prioridad.
+- `T = min(100, días_sin_agua / 5 × 100)`. Desde DEC-C15, el tiempo sin agua también compensa la demanda con el 50 %.
 - Proveedor y modelo de IA configurables por entorno, sin claves en el código.
 - Interfaz simulada de WhatsApp e interfaz de aprobación que funcionen sin servicios externos.
 - Integraciones intercambiables (mapas, geocodificación, rutas, IA, mensajería, transcripción, base de datos, archivos, monitoreo) que funcionen sin credenciales y muestren `NOT_CONFIGURED` cuando falten.

@@ -52,7 +52,7 @@ Cada ejecución registra:
 - los mensajes simulados y su "envío";
 - la decisión del supervisor, con su huella.
 
-Todo lleva `version_reglas = criterios-1.0-rev.4+construccion-2026-10-17`. Para consultarlo: `uv run water-coordinator traza <id>`.
+Todo lleva `version_reglas = criterios-1.0-rev.4+dec-c16-2026-10-17`. Para consultarlo: `uv run water-coordinator traza <id>`.
 
 ## Grafo del código (graphify)
 
