@@ -81,6 +81,16 @@ class Settings(BaseSettings):
     a_personas_referencia: int = 1000
 
 
+def usar_certificados_del_sistema() -> None:
+    """Verifica TLS con el almacén de certificados del sistema operativo (como el navegador).
+
+    En esta máquina un antivirus/proxy intercepta TLS y su certificado raíz solo está en el almacén de Windows.
+    """
+    import truststore
+
+    truststore.inject_into_ssl()
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

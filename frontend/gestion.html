@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -193,20 +194,23 @@
       <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1rem; color:#F5F7FA;">Mapa de comunidades afectadas</h2>
       <div class="map-placeholder" id="mapaCanvas">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 3 1 22 23 22 23 3"></polygon><polyline points="9 3 22 3 12 8"></polyline></svg>
-        <div id="mapaMensaje">Conecta el proveedor de mapas para mostrar ubicaciones.</div>
+        <div id="mapaMensaje">Cargando ubicaciones…</div>
       </div>
       <div class="legend" style="margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
-          <div class="badge-status badge-critical" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Crítica</div>
-          <span>Sin agua / Crítica</span>
+          <div class="badge-status badge-orange" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Pendiente</div>
+          <span>Pendiente de aprobación</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
-          <div class="badge-status badge-cyan" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Recibido</div>
-          <span>Reporte recibido</span>
+          <div class="badge-status badge-purple" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Revisión</div>
+          <span>Pendiente de revisión</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
-          <div class="badge-status badge-green" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Restablecido</div>
-          <span>Servicio restablecido</span>
+          <div class="badge-status badge-green" style="font-size:0.7rem; padding:0.2rem 0.5rem;">Aprobado</div>
+          <span>Aprobado (no ejecutado)</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#94a3b8;">
+          <span>Punto relleno = coordenadas confirmadas · punto tenue con borde discontinuo = coordenadas estimadas</span>
         </div>
       </div>
     </div>
@@ -406,6 +410,7 @@
   </footer>
 
   <!-- Conectar reportes, comunidades, mapa y estadísticas a los servicios del backend. -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="js/main.js"></script>
   <script src="js/api.js"></script>
   <script>
@@ -569,11 +574,7 @@
     renderTracking();
 
     /* ---------- Estadísticas ---------- */
-    // TODO: poblar indicadores y series con la respuesta de la API de estadísticas.
-    const byDistrict = [];
-    const byStatus = [];
-    const weeklyReports = [];
-
+    // Series calculadas en el navegador a partir de GET /api/incidents (ver cargarIncidentes).
     const weeklyChart = document.getElementById('weeklyReportsChart');
     const svgNamespace = 'http://www.w3.org/2000/svg';
     const chartWidth = 600;
@@ -587,6 +588,8 @@
       return element;
     };
 
+    function renderEstadisticas(byDistrict, byStatus, weeklyReports) {
+    weeklyChart.innerHTML = '';
     if (weeklyReports.length > 0) {
       const weeklyMax = Math.ceil(Math.max(...weeklyReports.map(report => report.value)) / 5) * 5;
       const weeklyScaleMax = Math.max(weeklyMax, 5);
@@ -611,7 +614,7 @@
 
       const weeklyPoints = weeklyReports.map((report, index) => ({
         ...report,
-        x: chartPadding.left + (chartPlotWidth * index) / (weeklyReports.length - 1),
+        x: weeklyReports.length > 1 ? chartPadding.left + (chartPlotWidth * index) / (weeklyReports.length - 1) : chartPadding.left + chartPlotWidth / 2,
         y: chartPadding.top + chartPlotHeight * (1 - report.value / weeklyScaleMax),
       }));
       weeklyChart.appendChild(createSvgElement('polyline', {
@@ -638,6 +641,7 @@
 
     const statusDonut = document.getElementById('statusDonut');
     const statusDonutLegend = document.getElementById('statusDonutLegend');
+    statusDonutLegend.innerHTML = '';
     const statusTotal = byStatus.reduce((total, status) => total + status.value, 0);
     let statusAngle = 0;
     const statusSegments = byStatus.map(status => {
@@ -665,6 +669,7 @@
     }
 
     const districtChart = document.getElementById('districtChart');
+    districtChart.innerHTML = '';
     const maxD = Math.max(...byDistrict.map(d => d.value));
     byDistrict.forEach(d => {
       const percent = Math.round((d.value / maxD) * 100);
@@ -681,6 +686,7 @@
     });
 
     const statusChart = document.getElementById('statusChart');
+    statusChart.innerHTML = '';
     const maxS = Math.max(...byStatus.map(s => s.value));
     byStatus.forEach(s => {
       const w = (s.value / maxS) * 100;
@@ -695,6 +701,87 @@
         <strong class="status-stat-value">${s.value}</strong>
       `;
       statusChart.appendChild(row);
+    });
+    }
+
+    /* Colores de las clases badge existentes, para que los gráficos coincidan con las etiquetas de estado. */
+    const COLOR_BADGE = { 'badge-cyan': '#0FC8BB', 'badge-purple': '#7139C8', 'badge-orange': '#f59e0b', 'badge-green': '#22c55e',
+                          'badge-slate': '#64748b', 'badge-blue': '#3b82f6', 'badge-critical': '#ef4444' };
+
+    function estadisticasDesde(items) {
+      const contar = (clave) => items.reduce((acc, i) => { const k = clave(i); acc[k] = (acc[k] || 0) + 1; return acc; }, {});
+      const porEstado = contar(i => i.estado_actual);
+      const byStatus = Object.entries(porEstado).map(([estado, value]) => ({
+        label: estadoLabel(estado), value, color: COLOR_BADGE[(ESTADOS[estado] || {}).badge] || '#64748b' }));
+      const byDistrict = Object.entries(contar(i => i.zona || 'Sin distrito'))
+        .map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+      const porDia = contar(i => i.recibido_en.slice(0, 10));
+      const weeklyReports = Object.keys(porDia).sort().map(dia => ({ day: `${dia.slice(8, 10)}/${dia.slice(5, 7)}`, value: porDia[dia] }));
+      const dias = Object.keys(porDia).sort();
+      document.querySelector('.stats-period strong').textContent = dias.length ? `${dias[0]} – ${dias[dias.length - 1]}` : '-';
+      document.getElementById('kpiReports').textContent = items.length;
+      document.getElementById('kpiSchedules').textContent = items.filter(i => i.plan && i.plan.estado === 'ejecutado').length;
+      // «Analizados por IA» = clasificación contrastada con el modelo; con reglas solas no cuenta.
+      document.getElementById('kpiAiReports').textContent = items.filter(i => i.metodo_clasificacion.includes('modelo_ia')).length;
+      renderEstadisticas(byDistrict, byStatus, weeklyReports);
+    }
+
+    /* ---------- Mapa (Leaflet + teselas OpenStreetMap) ---------- */
+    // Solo se dibujan coordenadas reales del geocodificador; si no hay ninguna, se mantiene el aviso.
+    let mapa = null;
+    let capaMarcadores = null;
+    let limites = null;
+
+    function ajustarMapa() {
+      if (!mapa || !limites) return;
+      mapa.invalidateSize();
+      mapa.fitBounds(limites, { maxZoom: 14 });
+    }
+
+    function renderMapa(items) {
+      const conCoordenadas = items.filter(i => i.coordenadas);
+      const mensaje = document.getElementById('mapaMensaje');
+      if (typeof L === 'undefined') {
+        mensaje.textContent = 'No se pudo cargar Leaflet (sin conexión a unpkg.com).';
+        return;
+      }
+      if (conCoordenadas.length === 0) {
+        mensaje.textContent = 'Ninguna afectación tiene coordenadas del geocodificador. Activa Nominatim y vuelve a cargar los datos.';
+        return;
+      }
+      const canvas = document.getElementById('mapaCanvas');
+      if (!mapa) {
+        canvas.innerHTML = '<div id="mapaLeaflet" style="position:absolute; inset:0;"></div>';
+        // preferCanvas: los marcadores no son SVG, así no les afecta el estilo del placeholder.
+        mapa = L.map('mapaLeaflet', { preferCanvas: true });
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(mapa);
+        capaMarcadores = L.layerGroup().addTo(mapa);
+      }
+      capaMarcadores.clearLayers();
+      const puntos = conCoordenadas.map(i => {
+        const color = COLOR_BADGE[(ESTADOS[i.estado_actual] || {}).badge] || '#64748b';
+        const estimada = i.coordenadas.tipo === 'estimadas';
+        const punto = [i.coordenadas.lat, i.coordenadas.lon];
+        L.circleMarker(punto, {
+          radius: 9, color, weight: 2, fillColor: color, fillOpacity: estimada ? 0.3 : 0.85, dashArray: estimada ? '4 4' : null,
+        }).bindPopup(`<strong>${esc(i.id_afectacion)}</strong><br>${esc(TIPOS[i.tipo_afectacion] || i.tipo_afectacion)} · ${esc(estadoLabel(i.estado_actual))}<br>
+          ${esc(i.ubicacion_reportada || i.zona || '')}<br><small>Coordenadas ${estimada ? 'estimadas (no confirmadas)' : 'confirmadas'} · ${esc(i.certeza_ubicacion || '')}</small>`)
+          .addTo(capaMarcadores);
+        return punto;
+      });
+      limites = L.latLngBounds(puntos).pad(0.3);
+      ajustarMapa();
+    }
+
+    // Leaflet necesita recalcular su tamaño cuando la pestaña oculta se muestra.
+    document.querySelector('[data-target="tab-mapa"]').addEventListener('click', () => {
+      setTimeout(ajustarMapa, 50);
+    });
+    window.addEventListener('hashchange', () => {
+      if (location.hash === '#tab-mapa') setTimeout(ajustarMapa, 50);
     });
 
     /* ---------- Conexión con la API (GET /api/incidents) ---------- */
@@ -749,6 +836,8 @@
           plan: i.plan,
         })));
         renderReportesIA(items);
+        estadisticasDesde(items);
+        renderMapa(items);
         const vacio = 'No hay reportes registrados en el backend.';
         mensajeVacio('emptyReportes', vacio);
         mensajeVacio('emptyTracking', vacio);

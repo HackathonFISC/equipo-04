@@ -101,3 +101,12 @@ def test_validacion_de_entrada():
         ReporteEntrada(canal="whatsapp_simulado", texto="", recibido_en=RECIBIDO)
     with pytest.raises(ValueError):
         ReporteEntrada(canal="correo", texto="x", recibido_en=RECIBIDO)
+
+
+async def test_demo_reiniciar_permite_repetir(settings, tmp_path):
+    s = settings.model_copy(update={"database_url": f"sqlite:///{tmp_path / 'demo.db'}"})
+    await demo(s, DATOS, aprobar=False)
+    with pytest.raises(ErrorPersistencia):  # IDs fijos: sin reiniciar no se duplican originales
+        await demo(s, DATOS, aprobar=False)
+    out = await demo(s, DATOS, aprobar=False, reiniciar=True)
+    assert len(out["planes"]) == 5

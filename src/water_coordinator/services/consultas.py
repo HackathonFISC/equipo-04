@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from water_coordinator.persistence.repository import Repositorio
 from water_coordinator.schemas.models import (
-    Categoria, Certeza, Confianza, DecisionSupervisor, Estado, MensajeSaliente, PlanPropuesto, Prioridad,
+    Categoria, Certeza, Confianza, Coordenadas, DecisionSupervisor, Estado, MensajeSaliente, PlanPropuesto, Prioridad,
     RegistroAfectacion, ReporteEntrada, TipoAfectacion, UbicacionNormalizada,
 )
 
@@ -44,6 +44,7 @@ class IncidenteVista(BaseModel):
     ubicacion_reportada: str | None
     zona: str | None = None
     certeza_ubicacion: Certeza | None = None
+    coordenadas: Coordenadas | None = None  # solo si las dio el geocodificador; nunca inventadas
     categoria: Categoria | None = None
     nivel_jerarquia: int | None = None
     T: float | None = None
@@ -119,6 +120,7 @@ def listar_incidentes(repo: Repositorio, estado: Estado | None = None, tipo: Tip
             estado_registro=r.estado, estado_actual=plan.estado if plan else r.estado,
             ubicacion_reportada=r.ubicacion_reportada, alerta_sanitaria=r.alerta_sanitaria,
             zona=u.zona_comunidad if u else None, certeza_ubicacion=u.estado_certeza if u else None,
+            coordenadas=u.coordenadas if u else None,
             plan=_resumen_plan(plan, decisiones) if plan else None,
         )
         if pr:

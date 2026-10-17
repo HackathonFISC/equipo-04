@@ -14,7 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from water_coordinator import __version__
 from water_coordinator.api.rutas import router
-from water_coordinator.config import Settings, get_settings
+from water_coordinator.config import Settings, get_settings, usar_certificados_del_sistema
 from water_coordinator.services.monitoreo import configurar_logs
 from water_coordinator.services.observabilidad import crear_observabilidad
 
@@ -26,6 +26,7 @@ def create_app(s: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def ciclo(app: FastAPI):
+        usar_certificados_del_sistema()
         configurar_logs(s)
         app.state.obs = crear_observabilidad(s)
         yield

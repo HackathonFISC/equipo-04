@@ -51,6 +51,13 @@
   - CSS sin cambios. Login, Mapa, Comunidades, Estadísticas y Configuración siguen como placeholders.
 - **Archivos auxiliares:** `.claude/launch.json` (configuraciones `api` y `frontend`) y `__version__` alineado a 0.2.0.
 
+### 2026-10-17: estadísticas, mapa Leaflet y conexión TLS (sin commit)
+
+- **Estadísticas:** la pestaña Estadísticas de `gestion.html` se calcula a partir de `/api/incidents` (P-015).
+- **Mapa:** usa Leaflet 1.9.4 con teselas OSM. Solo dibuja coordenadas reales del geocodificador, y `/api/incidents` ahora incluye `coordenadas`.
+- **`demo --reiniciar`:** vacía la base SQLite de desarrollo antes de cargar.
+- **`truststore`:** las conexiones HTTPS de Python usan el almacén de certificados de Windows. Con esto Nominatim funciona en esta máquina, verificado con consultas reales.
+
 ## Decisiones
 
 - **Confirmadas:** D-001 a D-015 y DEC-C01 a DEC-C16 en [DECISIONS.md](DECISIONS.md). D-009 (no tocar el frontend) quedó obsoleta.
@@ -74,7 +81,8 @@
 | Comprobación | Resultado |
 | --- | --- |
 | `uv sync` | OK, con `system-certs` por la intercepción TLS. |
-| `uv run pytest -q` | **105 aprobadas, 5 omitidas**, en unos 16 s. Son las 77 anteriores más 28 nuevas de API y Langfuse. |
+| `uv run pytest -q` | **106 aprobadas, 5 omitidas**, en unos 15 s. |
+| Nominatim real | 2 coordenadas estimadas, 1 ubicación ambigua y 2 sin resultado por el defecto del extractor. |
 | API local (`uvicorn`, `curl`) | `/health` → `ok` con BD `ok`; `/docs` → 200; CORS devuelve `allow-origin` para `localhost:5500` y nada para un origen ajeno. |
 | Panel en el navegador | Datos, estados reales, decisión simulada, FAQ y error con la API caída comprobados; diseño conservado (ver `tests/testsresults.md`). |
 | Langfuse | Probado con un cliente simulado y con el SDK real contra un puerto cerrado. **Sin traza real verificada en un proyecto de Langfuse** (no se usaron credenciales). |

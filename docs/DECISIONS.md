@@ -65,6 +65,9 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 | P-011 | Los reportes `indeterminado` no pasan del Agente 1; el Agente 6 les pide más información. | §3.3. |
 | P-013 | Urgencia en el Tracking = nivel de la jerarquía del Agente 3 (1–5). El KPI «Urgencia crítica» queda sin calcular ("-") porque no hay definición aprobada. | Evita inventar una regla de urgencia. |
 | P-014 | El panel registra las decisiones con el supervisor `panel-web (sin autenticación)`. | No hay identidad verificada (DEC-19). |
+| P-015 | Estadísticas calculadas en el navegador a partir de `/api/incidents`. Los KPI sin definición aprobada (incidencias confirmadas, comunidades afectadas, tiempo promedio de atención) quedan en «-». «Analizados por IA» solo cuenta las clasificaciones contrastadas con el modelo. | No inventar indicadores. |
+| P-016 | TLS verificado con el almacén de certificados de Windows (`truststore`), porque un antivirus o proxy intercepta TLS y `certifi` rechaza su certificado. | Sin esto fallaban Nominatim, Claude y Langfuse. |
+| P-017 | `demo --reiniciar` vacía la base SQLite de desarrollo (no funciona con PostgreSQL). | Permite repetir el demo con IDs fijos. |
 | P-012 | El modelo de IA solo contrasta la clasificación. Si discrepa, la confianza baja a `baja` y el registro va a revisión; nunca sobrescribe. | Separar la IA de las reglas. |
 
 ## Pendientes
@@ -83,5 +86,5 @@ Cada decisión avanza así: **Pendiente → Propuesta → Aprobada** (o Descarta
 ## Hallazgos abiertos (2026-10-17, tarea de API)
 
 - **Claude no funciona con la versión instalada:** `autogen-ext` 0.7.5 envía `temperature` y el SDK `anthropic` 1.15 lo rechaza (`TypeError`). El Agente 1 vuelve a las reglas y lo registra en el log. Para arreglarlo hay que fijar una versión compatible de `anthropic` o cambiar de cliente. Requiere decisión.
-- **Ubicación reportada:** la extracción del Agente 1 puede incluir la palabra siguiente tras un punto (p. ej. «Nuevo Chorrillo, Arraiján. Empezó»). Es un defecto del extractor, no una regla, y todavía no se ha corregido.
+- **Ubicación reportada:** la extracción del Agente 1 puede incluir la palabra siguiente tras un punto (p. ej. «Nuevo Chorrillo, Arraiján. Empezó»). Es un defecto del extractor, no una regla, y todavía no se ha corregido. **Impacto confirmado:** con esas cadenas Nominatim no encuentra resultados, así que esas afectaciones no aparecen en el mapa.
 - **Planificación entre lotes:** cada `POST /api/incidents` se planifica en su propio lote, así que el Agente 4 no conoce las cisternas asignadas en lotes anteriores. Puede haber doble asignación entre lotes. Está documentado y no está resuelto.

@@ -1,6 +1,6 @@
 """CLI del prototipo. Ningún comando despacha cisternas ni envía mensajes reales por defecto.
 
-  water-coordinator demo [--datos RUTA] [--sin-aprobacion]
+  water-coordinator demo [--datos RUTA] [--sin-aprobacion] [--reiniciar]
   water-coordinator aprobar PLAN_ID --decision aprobado|rechazado|cambios_solicitados --supervisor NOMBRE [--simulada] [--motivo TEXTO]
   water-coordinator estado [--comprobar]
   water-coordinator traza ID
@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from water_coordinator import __version__
-from water_coordinator.config import Settings, get_settings
+from water_coordinator.config import Settings, get_settings, usar_certificados_del_sistema
 from water_coordinator.orchestration.pipeline import procesar_configurado
 from water_coordinator.persistence.repository import Repositorio
 from water_coordinator.schemas.models import ReporteEntrada
@@ -28,11 +28,13 @@ DATOS_DEMO = Path("data/simulados/reportes.json")
 SUPERVISOR_SIMULADO = "SIMULACION-PRUEBA"  # DEC-19: solo pruebas; no sustituye a un supervisor real
 
 
-async def demo(s: Settings, ruta: Path, aprobar: bool) -> dict:
+async def demo(s: Settings, ruta: Path, aprobar: bool, reiniciar: bool = False) -> dict:
     datos = json.loads(ruta.read_text(encoding="utf-8"))
     momento = datetime.fromisoformat(datos["momento_planificacion"])
     reportes = [ReporteEntrada(**r) for r in datos["reportes"]]
     repo = Repositorio(s.database_url)
+    if reiniciar:
+        repo.reiniciar()
     obs = crear_observabilidad(s)
     try:
         res = await procesar_configurado(s, reportes, repo, momento, obs)
@@ -92,6 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     d = sub.add_parser("demo", help="Ejecuta el flujo completo con datos simulados")
     d.add_argument("--datos", type=Path, default=DATOS_DEMO)
     d.add_argument("--sin-aprobacion", action="store_true")
+    d.add_argument("--reiniciar", action="store_true", help="Vacía la base SQLite de desarrollo antes de cargar (borra todo)")
     a = sub.add_parser("aprobar", help="Registra la decisión del supervisor sobre un plan")
     a.add_argument("id_plan")
     a.add_argument("--decision", required=True, choices=["aprobado", "rechazado", "cambios_solicitados"])
@@ -105,9 +108,10 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     s = get_settings()
+    usar_certificados_del_sistema()
     configurar_logs(s)
     if args.cmd == "demo":
-        out = asyncio.run(demo(s, args.datos, not args.sin_aprobacion))
+        out = asyncio.run(demo(s, args.datos, not args.sin_aprobacion, args.reiniciar))
     elif args.cmd == "aprobar":
         try:
             dec = registrar_decision(Repositorio(s.database_url), args.id_plan, args.decision, args.supervisor, args.simulada, args.motivo)

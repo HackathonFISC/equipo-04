@@ -76,7 +76,13 @@ Se usan dos terminales, ambas desde la raíz del repo.
      MODEL_PROVIDER=none GEOCODER_PROVIDER=none uv run water-coordinator demo --sin-aprobacion
      ```
 
-     En PowerShell, define antes las variables con `$env:MODEL_PROVIDER="none"; $env:GEOCODER_PROVIDER="none"`. Estos datos van marcados como simulados.
+     Cómo definir las variables según la terminal:
+     - **PowerShell:** `$env:MODEL_PROVIDER="none"; $env:GEOCODER_PROVIDER="none"`.
+     - **cmd:** `set MODEL_PROVIDER=none` y `set GEOCODER_PROVIDER=none`, en líneas separadas.
+     
+     Estos datos van marcados como simulados.
+   - **Repetir el demo:** los reportes simulados tienen IDs fijos. Para recargarlos, añade `--reiniciar`, que **vacía la base SQLite de desarrollo**, con todos sus datos y aprobaciones.
+   - **Ver puntos en el mapa:** carga los datos con el geocodificador activo, es decir, sin `GEOCODER_PROVIDER=none` y con Nominatim configurado en `.env`. Se hacen unas 5 consultas reales a Nominatim.
    - Con `POST /api/incidents` desde `/docs`.
 
 En VS Code o en la app de Claude, `.claude/launch.json` define las configuraciones `api` y `frontend` con estos mismos comandos.

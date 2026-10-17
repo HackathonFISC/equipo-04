@@ -4,7 +4,7 @@ Ejecución: `uv run pytest -q`. No requiere credenciales ni Internet.
 
 ## Última ejecución: 2026-10-17
 
-**105 aprobadas, 5 omitidas** (integración sin credenciales), en unos 16 s. Antes eran 77; las 28 nuevas son de la API y de Langfuse.
+**106 aprobadas, 5 omitidas**, en unos 15 s. Antes eran 77; hay 28 nuevas de la API y Langfuse y 1 de `demo --reiniciar`.
 
 | Archivo | Cubre | Pruebas |
 | --- | --- | --- |
@@ -37,3 +37,10 @@ Con la API en `127.0.0.1:8000` y el frontend servido en `localhost:5500`, tras c
 ## Evals de entrega
 
 Pendiente: definir 15 casos o más con métrica (por ejemplo, exactitud de la clasificación sobre un conjunto etiquetado y conformidad con las reglas de prioridad y demanda).
+
+## Verificación manual: estadísticas y mapa (2026-10-17)
+
+Con los servidores de la usuaria en `127.0.0.1:8000` y `127.0.0.1:5500`, y los datos cargados con `demo --reiniciar --sin-aprobacion` y Nominatim activo:
+
+- **Estadísticas:** se ven 6 reportes; el período 2026-10-17; la dona con 5 pendientes de aprobación y 1 pendiente de información; los distritos (La Chorrera 2, Arraiján 2, Capira 1, Sin distrito 1) y la tendencia de un solo día.
+- **Mapa:** carga las teselas de OSM con su atribución y marca las afectaciones que tienen coordenadas estimadas. Las que no tienen coordenadas no se dibujan.

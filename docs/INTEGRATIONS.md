@@ -23,7 +23,7 @@ Con `--comprobar` hace una llamada real a cada servicio configurado. Es la únic
 | Modelo de IA | AutoGen: OpenAI / compatible con OpenAI (Ollama) / Anthropic | `NOT_CONFIGURED` | `MODEL_PROVIDER`, `MODEL_NAME` y, según el proveedor, `MODEL_API_KEY` o `MODEL_BASE_URL`. Sin modelo se clasifica con reglas. |
 | Geocodificación | Nominatim (OSM) | `NOT_CONFIGURED` | `GEOCODER_PROVIDER=nominatim` y `NOMINATIM_USER_AGENT` con un contacto. Sin geocodificador: certeza "aproximada" por distrito o "no verificada", sin coordenadas. |
 | Rutas | OSRM | `NOT_CONFIGURED` | `OSRM_BASE_URL` y la ubicación de la organización (`ORGANIZACION_LAT/LON`, [PEND]). El Agente 5 no forma parte de la etapa 1. |
-| Mapas | Leaflet + teselas OSM | `NOT_CONFIGURED` | `MAP_TILE_URL` y la integración de Leaflet en `frontend/` (fuera del alcance de la tarea de API; el mapa sigue como placeholder). |
+| Mapas | Leaflet 1.9.4 (unpkg) + teselas OSM | Integrado en `gestion.html` | El mapa solo dibuja coordenadas del geocodificador y distingue estimadas de confirmadas. Las teselas se piden desde el navegador con atribución. `MAP_TILE_URL` en `.env` todavía no la usa el frontend: la URL está en el JS. |
 | Mensajería | Simulada (`mock`) | `CONFIGURED` | Funciona sin red. WhatsApp Cloud API: `NOT_CONFIGURED` (token, phone number id, app secret, verify token). Con credenciales queda `DISABLED` hasta poner `WHATSAPP_SEND_ENABLED=true`. |
 | Transcripción | Whisper local (faster-whisper) / Google STT | `NOT_CONFIGURED` | Whisper: `uv sync --extra transcripcion-local` y `TRANSCRIPTION_PROVIDER=whisper_local`. Google: el extra, credenciales y facturación. |
 | Base de datos | SQLite (SQLAlchemy) | `CONFIGURED` | Nada. Para PostgreSQL basta cambiar `DATABASE_URL` e instalar el driver. |
@@ -32,7 +32,7 @@ Con `--comprobar` hace una llamada real a cada servicio configurado. Es la únic
 | API HTTP | FastAPI + Uvicorn (local) | Implementada | Solo `127.0.0.1`; CORS solo para `CORS_ORIGINS`. Sin autenticación: las decisiones por HTTP son simuladas. |
 | Monitoreo externo | Sentry (opcional) | `DISABLED` | No implementado; los logs JSON locales con redacción de secretos están siempre activos. |
 
-**Probado con servicios reales:** ninguno. No hay credenciales y no se activaron servicios externos.
+**Probado con servicios reales:** Nominatim (2026-10-17). `demo --reiniciar` con el geocodificador activo devolvió coordenadas estimadas para 2 de 5 ubicaciones y 1 ambigua. Ningún otro servicio está probado con credenciales.
 **Probado sin red:** todos los adaptadores, con transportes HTTP simulados (`tests/test_integraciones.py`).
 
 ## Pruebas de integración

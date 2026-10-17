@@ -49,6 +49,13 @@ class Repositorio:
         self.engine = create_engine(url)
         meta.create_all(self.engine)
 
+    def reiniciar(self) -> None:
+        """Vacía la base de desarrollo (solo SQLite). Borra documentos y traza: usar únicamente con datos de prueba."""
+        if self.engine.dialect.name != "sqlite":
+            raise ErrorPersistencia("reiniciar solo está permitido en la base SQLite de desarrollo.")
+        meta.drop_all(self.engine)
+        meta.create_all(self.engine)
+
     def insertar(self, tipo: str, id_: str, obj: BaseModel) -> None:
         """Alta inmutable (originales): falla si ya existe en lugar de sobrescribir."""
         try:
