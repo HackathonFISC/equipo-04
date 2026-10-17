@@ -85,6 +85,12 @@ Cada salida se guarda en SQLite con su traza: agente, versión de reglas y model
 El panel consulta la API y el supervisor decide cada plan.
 Si está activado, cada ejecución se envía a Langfuse como una traza con una observación por agente y las llamadas a Claude como generation.
 
+Muestra de un trace de flujo en langfuse: https://us.cloud.langfuse.com/project/cmvbbi8a300a3ad0jtsd3jl7b/traces/6aafea4690ff69a22ff1bf5338f434be?observation=f60deffb61060677
+
+**Metodologia del Proyecto**
+[Metodologia Hackathon Fisc las Power Rangers.docx](https://github.com/user-attachments/files/33599178/Metodologia.Hackathon.Fisc.las.Power.Rangers.docx)
+
+
 ## Tecnologías y fuentes de datos
 Tecnologías
 
@@ -148,8 +154,31 @@ La API no tiene autenticación y está pensada solo para uso local (127.0.0.1). 
 
 ## Evals
 
-Al menos 15 casos de prueba, métrica y resultados.
+## Decisiones del supervisor (sobre los datos del CSV)
 
+1. *Aprobación simulada.* El plan quedó «aprobado» y marcado como simulación de prueba. Se guardó una huella del plan, para saber exactamente qué versión se aprobó, y un evento con el estado anterior y el nuevo.
+2. *Rechazo con motivo.* El plan quedó «rechazado» y se guardó el motivo («Ruta no viable»).
+3. *Solicitud de cambios.* El plan quedó en «cambios solicitados».
+4. *Decidir dos veces el mismo plan.* Se intentó rechazar un plan ya aprobado y el sistema lo bloqueó: el plan sigue aprobado.
+5. *Aprobación real de un plan incompleto.* Bloqueada. Sin la ruta del Agente 5, un plan solo puede aprobarse como simulación.
+6. *Aprobar un plan al que le faltan datos de demanda.* Bloqueada. Solo se puede decidir sobre planes que están pendientes de aprobación.
+7. *Plan inexistente.* El sistema responde «No existe el plan» y no cambia nada.
+
+## Integridad y panel
+
+8. *Reingresar un reporte ya cargado.* Se intentó volver a meter REP-2026-001 con el texto alterado. El sistema lo rechazó y el original quedó intacto.
+9. *Decisión desde el panel.* Al intentar forzar una aprobación real por la API, la respuesta fue un error (422). La decisión normal se aceptó, pero quedó registrada como simulada.
+10. *El panel refleja las decisiones.* Los 42 incidentes aparecen con sus estados nuevos (aprobado, rechazado, cambios solicitados), y la respuesta no incluye textos originales ni contactos.
+
+## Escenarios simulados
+
+11. *Hospital frente a 20 casas.* El hospital queda primero (nivel 1 de la jerarquía), aunque su reporte llegó después.
+12. *Agua contaminada en Guadalupe.* Se clasifica como agua contaminada y activa la alerta sanitaria.
+13. *Emergencia más grande que la flota disponible* (15 edificios). La cobertura es del 77,06 %, así que el plan exige aprobación extraordinaria. Sin justificación se bloquea; con justificación se registra.
+14. *La misma emergencia de día y de noche.* A las 10:00 se asignan 25 cisternas y se cubre el 77,06 %. A las 22:00 solo hay 10, todas subcontratadas, y se cubre el 30,83 %. Coincide con los horarios aprobados.
+15. *Consulta irrelevante junto a un reporte real.* La pregunta «¿A qué hora abren la oficina?» queda como indeterminada y no genera plan. Los mensajes al ciudadano no prometen entrega ni hora de llegada.
+
+Anoté los resultados en [testsresults.md](tests/testsresults.md).
 
 ## Bitácora de IA
 
@@ -170,6 +199,181 @@ Al menos 15 casos de prueba, métrica y resultados.
 
 [Bitacora_de_prompts_equipo04 ChatGPT.docx](https://github.com/user-attachments/files/33598646/Bitacora_de_prompts_equipo04.ChatGPT.docx)
 
+# BITÁCORA DE DESARROLLO — PROYECTO AQUAALERTA PANAMÁ OESTE
+
+*Fecha:* 17 de octubre de 2026  
+*Ubicación de trabajo:* D:\DS4.2  
+*Responsable:* Asistente de desarrollo (OpenCode)  
+*Estado:* Completado — entregables listos en carpetas separadas
+
+---
+
+## 1. ANÁLISIS Y CONFIGURACIÓN DEL ENTORNO
+
+| Acción | Detalle |
+|--------|---------|
+| Requerimiento | Desarrollar plataforma web completa "AquaAlerta Panamá Oeste" para gestión de interrupciones de agua potable en Arraiján y La Chorrera, Panamá. |
+| Entorno inicial | Windows (PowerShell) sin Node.js instalado. |
+| Instalación | Node.js LTS v24.20.0 mediante winget. |
+| Verificación | node --version → v24.20.0; npm.cmd --version → 11.19.0. |
+
+---
+
+## 2. PROYECTO REACT (STACK COMPLETO)
+
+*Ruta:* D:\DS4.2\aquaalerta
+
+### Stack utilizado
+- React 19 + TypeScript
+- Vite 8.3.4
+- Tailwind CSS 3.4.19
+- Lucide React (iconos)
+- Recharts (gráficos)
+- React Router DOM 7.18.4
+- Leaflet + react-leaflet (mapas OpenStreetMap)
+- React Hook Form + Zod (formularios y validación)
+- Supabase JS (autenticación y base de datos, opcional)
+
+### Archivos creados
+
+| Ruta | Contenido |
+|------|-----------|
+| tailwind.config.js | Paleta de colores (#071019, #0FC8BB, #7139C8), animaciones, tipografía Inter |
+| src/index.css | Estilos base, glassmorphism, partículas, scrollbar |
+| src/lib/utils.ts | Utilidades de fechas, códigos de seguimiento, formato |
+| src/lib/supabase.ts | Cliente Supabase y detección de configuración |
+| src/types/index.ts | Modelo de datos (usuarios, comunidades, incidencias, reportes, cisternas, programaciones, auditoría) |
+| src/config/catalogs.ts | Catálogos de distritos, corregimientos y tipos de incidencia |
+| src/services/api.ts | Capa de datos con Supabase + fallback localStorage (sin datos falsos) |
+| src/components/ui/ | Button, Input, Select, TextArea, Card, Badge, Skeleton, EmptyState, StatCard, Toast, ToastList |
+| src/components/layout/ | Logo, Header (menú persistente), Footer, Sidebar (admin) |
+| src/hooks/useAuth.ts | Autenticación, roles (admin/operator/public), cierre de sesión |
+| src/pages/ | Home, Communities, Report, Tracking, Cisterns, Statistics, Info, Login, Admin |
+| src/App.tsx | Rutas públicas, privadas (/admin/*), autenticación requerida |
+| tsconfig.app.json | Configuración con alias @/ → ./src/* |
+| vite.config.ts | Alias Vite para resolver @/ en servidor de desarrollo |
+| .env.example | Variables de entorno de ejemplo (sin credenciales reales) |
+| README.md | Instrucciones de instalación y ejecución |
+
+### Comandos ejecutados
+- npm create vite@latest aquaalerta -- --template react-ts
+- npm install tailwindcss postcss autoprefixer lucide-react recharts react-router-dom framer-motion clsx tailwind-merge leaflet react-leaflet date-fns zod react-hook-form @hookform/resolvers @supabase/supabase-js
+- npm install -D @types/react-leaflet @types/leaflet typescript @types/node
+- npx tailwindcss init -p
+- npx tsc --noEmit -p tsconfig.app.json → *0 errores*
+- npm run build → *Build exitoso en dist/* (solo advertencia de tamaño de chunk > 500 kB)
+
+---
+
+## 3. SITIO WEB ESTÁTICO (HTML/CSS/JS PURO)
+
+*Ruta:* D:\DS4.2\aquaalerta-web
+
+### Páginas (8)
+| Archivo | Descripción |
+|---------|-------------|
+| index.html | Inicio con hero, tarjetas informativas y navegación |
+| comunidades.html | Buscador, filtros, mapa simulado, listado y panel de detalle |
+| reportar.html | Formulario con validación Zod-like, campos opcionales, código de seguimiento |
+| seguimiento.html | Consulta de estado por código de seguimiento |
+| cisternas.html | Programación de distribución, KPIs y tabla de entregas |
+| estadisticas.html | Dashboard con tarjetas y gráficos de barras CSS |
+| informacion.html | Acerca de, FAQ, formulario de contacto |
+| login.html | Inicio de sesión con mostrar/ocultar contraseña |
+
+### Archivos de soporte
+- css/style.css — Estilos unificados para todas las páginas
+- js/main.js — Menú móvil, partículas, scroll suave, toasts
+- js/comunidades.js, js/reportar.js, js/seguimiento.js, js/cisternas.js, js/estadisticas.js
+
+---
+
+## 4. REFACTORIZACIÓN DEL PANEL ADMIN (PROMPT MEJORADO)
+
+Se reescribió src/pages/Admin.tsx siguiendo el segundo prompt del usuario, agregando:
+
+- *Acceso protegido:* login primero, rutas /admin/* requieren autenticación (rol admin/operator).
+- *Dashboard General:* KPIs de reportes, comunidades, cisternas, pendientes; estatus de contrataciones (pendiente, aprobado, activo, cerrado); seguimiento de trayectos y envíos (en ruta, completado, con retraso, cancelado).
+- *Módulo de Entregas de Agentes:* tabla modular con nombre del agente, fecha/hora, tipo de entrega, evidencia, estado de revisión (aprobado/pendiente/rechazado), filtros por fecha/agente/estado, exportación CSV.
+- *Módulo de Seguimiento de Reportes de Agua:* KPIs (total, pendientes, resueltos, urgencia crítica), indicadores de urgencia por colores (rojo crítica, amarillo media, verde normal), lista organizada.
+- *Buscador general y filtros rápidos* en gestión de reportes y seguimiento.
+- *Exportación de datos* (botón CSV visible).
+- *Footer único, limpio y al final.*
+
+---
+
+## 5. SITIO ESTÁTICO MEJORADO (8 PÁGINAS)
+
+*Ruta:* D:\DS4.2\aquaalerta-sitio-web
+
+### Páginas
+| Archivo | Descripción |
+|---------|-------------|
+| index.html | *Primera pantalla:* Inicio de sesión (login) |
+| admin.html | Panel de administración con actividades en barra superior |
+| reportes.html | Gestión de reportes con botón Descargar CSV |
+| comunidades.html | Comunidades afectadas con buscador y filtros |
+| mapa.html | Mapa geográfico provisional |
+| tracking.html | Seguimiento de reportes con urgencia por colores |
+| estadisticas.html | Dashboard estadístico |
+| configuracion.html | Configuración, privacidad, formulario contacto |
+
+### Características
+- Todas las páginas comparten el mismo header, footer y cuerpo (secuencia consistente).
+- Diseño responsivo (móvil, tableta, escritorio).
+- Menú desplegable en pantallas pequeñas.
+- Botón de descarga CSV en gestión de reportes.
+- Paleta y estilo idénticos al proyecto React.
+
+---
+
+## 6. SITIO ADMIN SIMPLE (3 PÁGINAS)
+
+*Ruta:* D:\DS4.2\aquaalerta-admin-simple
+
+Solicitado por el usuario para reducir complejidad y evitar problemas de display en múltiples páginas.
+
+| Archivo | Descripción |
+|---------|-------------|
+| index.html | *Primera pantalla:* Inicio de sesión (coincide con diseño solicitado: logo, correo, contraseña, mostrar/ocultar, Recordarme, ¿Olvidaste tu contraseña?, botón turquíso) |
+| admin.html | Panel con *actividades del administrador en la parte superior* (píldoras navegables: Dashboard, Reportes, Comunidades, Mapa, Tracking, Estadísticas, Configuración) |
+| gestion.html | *Gestión unificada en pestañas:* Reportes (con buscador, filtros, descarga CSV), Comunidades, Mapa, Tracking, Estadísticas, Configuración — todo en una sola página |
+
+### Archivos de soporte
+- css/style.css — Hoja de estilos única para las 3 páginas
+- js/main.js — Menú móvil, partículas, toasts, lógica de pestañas y formularios
+
+### Mejoras de diseño implementadas
+- Barra superior de actividades con scroll horizontal en móviles (evita desbordamiento).
+- Tarjetas y tablas con overflow-x-auto para evitar desplazamiento horizontal roto.
+- Menú hamburguesa funcional en celulares.
+- KPIs apilados en columna en móviles.
+- Animaciones discretas (partículas, fade-in, float) sin afectar legibilidad.
+
+---
+
+## 7. RESUMEN DE ENTREGABLES POR CARPETA
+
+
+D:\DS4.2\aquaalerta/               → Proyecto React completo (Vite + TS + Tailwind + Supabase opcional)
+D:\DS4.2\aquaalerta-web/           → Sitio estático de 8 páginas (HTML/CSS/JS)
+D:\DS4.2\aquaalerta-sitio-web/     → Sitio estático mejorado de 8 páginas (misma identidad)
+D:\DS4.2\aquaalerta-admin-simple/  → Sitio admin simple de 3 páginas (HTML/CSS/JS)
+
+
+---
+
+## 8. ESTADO FINAL
+
+- ✅ TypeScript compila sin errores en el proyecto React.
+- ✅ Build de producción generado en dist/.
+- ✅ Sitios estáticos listos para abrir directamente en el navegador (sin npm install).
+- ✅ Todas las páginas mantienen la identidad visual de AquaAlerta (turquesa #0FC8BB, morado #7139C8, fondo azul marino #071019).
+- ✅ No se inventan datos de demostración; se muestran estados vacíos cuando no hay registros.
+- ✅ No se exponen credenciales ni claves API en el frontend.
+- ✅ Contraseñas no se almacenan en texto plano (auth vía Supabase o simulado localmente).
+
+---
 
 ---
 
